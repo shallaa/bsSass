@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<title>bs5 Test suite</title>
+<meta name="keywords" content="bs5" />
+<meta name="description" content="bs5 Test suite" />
+<meta charset="utf-8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,target-densitydpi=medium-dpi" />
+<link rel="shortcut icon" href="http://blog.bsidesoft.com/favicon.ico" type="image/x-icon">
+</head>
+<body>
+<div id="stage" style="width:100px">
+	test stage
+	<div class="test0">test0</div>
+	<div class="wrap0">
+		<div class="a">a</div>
+		<div class="b">b</div>
+		<div class="c">c</div>
+		<div class="d">d</div>
+	</div>
+	<div class="wrap1">
+		<div class="a1">a1</div>
+		<div class="b1">b1</div>
+		<div class="c1">c1</div>
+	</div>
+</div>
+<script src="../../bsSass.0.1.js"></script>
+<script id="a" type="text/scss">
+$color:#f00;
+$width:100px;
+$position:absolute;
+$back:#aaf;
+@mixin f0{
+	height:50px;
+}
+@mixin f2( $color, $size ){
+	margin:0;
+	font-size:$size;
+	color:$color;
+}
+.test0{
+	background:$color;
+	width:$width;
+	@include f0;
+	@include f2( #fff, 20px );
+}
+.wrap0{
+	top:100px;
+	background:$back;
+	position:$position;
+	width:300px;
+	height:300px;
+	.wrap1{
+		top:500px;
+	}
+}
+</script>
+<script id="b" type="text/scss">
+.a{
+	background:#ff0;
+	width:10px;
+	.b{
+		margin-left:30px;
+		height:10px;
+		.c{
+			margin-left:60px;
+			font-size:20px;
+			.d{
+				margin-left:90px;
+				color:#f00;
+			}
+			font-weight:bold;
+		}
+		padding:10px;
+	}
+	position:relative;
+}
+</script>
+<script id="c" type="text/scss">
+.a1{
+	width:10;
+	.b1{
+		margin-left:30;
+		height:10px;
+		.c1{
+			margin-left:60;
+			font:{
+				size:20px;
+				weight:bold;
+			}
+			padding:10;
+		}
+		padding:0;
+	}
+	position:relative;
+}
+</script>
+<script>
+bsSass( document.getElementById('a').text );
+bsSass( document.getElementById('b').text );
+bsSass( document.getElementById('c').text );
+</script>
+</body>
+</html>
+
