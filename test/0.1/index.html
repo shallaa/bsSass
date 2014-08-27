@@ -132,11 +132,28 @@ $back:#aaf;
 	margin:5;
 }
 </script>
+<script id="e" type="text/scss">
+%btn{
+	width:50;
+}
+.a{
+	margin:0;
+	margin:5;
+}
+.a2{
+	@extend .a;
+	@extend %btn;
+	margin:7;
+}
+</script>
 <script>
+
 bsSass( document.getElementById('a').text );
 bsSass( document.getElementById('b').text );
 bsSass( document.getElementById('c').text );
+
 //bsSass( document.getElementById('d').text );
+bsSass( document.getElementById('e').text );
 </script>
 </body>
 </html>

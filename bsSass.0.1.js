@@ -1,4 +1,4 @@
-/* bsSass v0.1.2
+/* bsSass v0.1.3
  * Copyright (c) 2013 by ProjectBS Committe and contributors. 
  * http://www.bsplugin.com All rights reserved.
  * Licensed under the BSD license. See http://opensource.org/licenses/BSD-3-Clause
@@ -23,16 +23,16 @@ var bsSass = (function( trim, bs ){
 		} ).toString(), i.substring( i.indexOf('var') - 1, i.lastIndexOf('}') ) ) )( b, arg.split(','), trim );
 		return '';
 	},
-	pAdd = function( v, arg ){
+	extend, rExtend = /[@]extend (.+)[;]/g, fExtend = function( $0, v ){return extend[v] || '';},
+	pAdd = function( v, arg, bodys ){
 		var i, j;
 		if( v.indexOf('@include') === 0 ){
 			v = ( i = v.indexOf('(') ) > -1 ? 
 				MIX[v.substring( 8, i ).replace( trim, '' )].apply( null, v.substring( i + 1, v.lastIndexOf(')') ).split(',') ) :
 				MIX[v.substr(8).replace( trim, '' )]();
-			for( v = v.split(';'), i = 0, j = v.length ; i < j ; i++ ) pAdd( v[i], arg );
-		}else if( v.indexOf('@extend') === 0 ){
+			for( v = v.split(';'), i = 0, j = v.length ; i < j ; i++ ) pAdd( v[i], arg, bodys );
 		}else if( v = v.replace( trim, '' ) ){
-			arg[arg.length] = v.substring( 0, i = v.indexOf(':') ).replace( trim, '' ), 
+			arg[arg.length] = j = v.substring( 0, i = v.indexOf(':') ).replace( trim, '' );
 			v = v.substr( i + 1 ).replace( trim, ''), v = VAR[v] || v,
 			arg[arg.length] = rNum.test(v) ? parseFloat(v) : v;
 		}
@@ -65,10 +65,13 @@ var bsSass = (function( trim, bs ){
 				self = t0[k][0], parent = t0[k][1], bodys[t1 = self.replace( rParent, parent )] = bodys[parent] + bodys[self];
 				if( t1 != t0[k][0] ) delete bodys[self];
 			}
+		extend = bodys;
+		for( k in bodys ) bodys[k] = bodys[k].replace( rExtend, fExtend );
 		for( k in bodys ){
-			console.log( k, bodys[k] );
 			if( k.indexOf('@') == -1 ){
-				for( c = bs.Css(k), v = bodys[k].split(';'), sels.length = i = 0, j = v.length; i < j ; i++ ) if( t0 = v[i].replace( trim, '' ) ) pAdd( t0, sels );
+				if( k.charAt(0) == '%' ) continue;
+				console.log( k, bodys[k] );
+				for( c = bs.Css(k), v = bodys[k].split(';'), sels.length = i = 0, j = v.length; i < j ; i++ ) if( t0 = v[i].replace( trim, '' ) ) pAdd( t0, sels, bodys );
 				c.S.apply( c, sels );
 			}else if( sel.substr( 0, 9 ) == 'font-face' ) bs.Css( k + ' ' + v );
 		}
