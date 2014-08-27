@@ -1,11 +1,13 @@
+/* bsSass v0.1.2
+ * Copyright (c) 2013 by ProjectBS Committe and contributors. 
+ * http://www.bsplugin.com All rights reserved.
+ * Licensed under the BSD license. See http://opensource.org/licenses/BSD-3-Clause
+ */
 var bsSass = (function( trim, bs ){
-	var r = /^[0-9.-]+$/, VAR, MIX,
-	r0 = /\$[^;:]+[:][^;:]+;/g, f0 = function(v){
-		v = v.substring( 0, v.length - 1 ).split(':');
-		VAR[v[0]] = v[1];
-		return '';
-	},
-	r1 = /[@]mixin [^@{]+[{][^@{()}]+[}]/g, f1 = function(v){
+	'use strict';
+	var rNum = /^[0-9.-]+$/, rSel = /[};][^};]+$/g, rParent = /[&]/g,
+	VAR = {}, rVAL = /\$[^;:]+[:][^;:]+;/g, fVAL = function(v){return v = v.substring( 0, v.length - 1 ).split(':'), VAR[v[0]] = v[1], '';},
+	MIX = {}, rMIX = /[@]mixin [^@{]+[{][^@{()}]+[}]/g, fMIX = function(v){
 		var n, arg = '', b, i;
 		v = v.substr(7).split('{'), n = v[0].replace( trim, '' );
 		if( ( i = n.indexOf('(') ) > -1 ) arg = n.substring( i + 1, n.lastIndexOf(')') ).replace( trim, '' ), n = n.substring( 0, i ).replace( trim, '' );
@@ -18,74 +20,59 @@ var bsSass = (function( trim, bs ){
 				while(i--) b = b.replace( r[i], arguments[i] ? arguments[i].replace( trim, '' ) : '' );
 				return b;
 			};
-		}).toString(), i.substring( i.indexOf('var') - 1, i.lastIndexOf('}') ) ) )( b, bs.trim(arg.split(',')), trim );
+		} ).toString(), i.substring( i.indexOf('var') - 1, i.lastIndexOf('}') ) ) )( b, arg.split(','), trim );
 		return '';
 	},
-	wrapSel = [], wrapBody = [], rc = /[{]/g,
-	parser = function( v, V, M ){
-		var arg = [], t0, v, i, j, k, l, m, n, o, p, w0, w1, w2, w3, w4, w5, w6, sel, val;
-		VAR = V || {}, MIX = M || {}, v = v.replace( r1, f1 ).replace( r0, f0 );
-		for( v = v.split('}'), i = 0, j = v.length ; i < j ; i++ ){
-			if( t0 = v[i].replace( trim, '' ) ){
-				sel = t0.substring( 0, k = t0.indexOf('{') ).replace( trim, '' ), val = t0.substr( k + 1 );
-				if( val.indexOf('{') > -1 ){
-					for( wrapSel.length = wrapBody.length = 0, wrapSel[0] = sel, w4 = k = m = n = 0, l = val.match(rc).length ; k < l ; k++ ){
-						n = val.indexOf( '{', m );
-						w0 = val.substring( m, n );
-						w1 = w0.lastIndexOf(';') + 1;
-						w2 = w0.substr( w1 ).replace( trim, '' );
-						w3 = w0.substring( 0, w1 ).replace( trim, '' ) + v[i + l - k].replace( trim, '' );
-						if( w2.charAt( w2.length - 1 ) == ':' ){
-							w4 = w2.substring( 0, w2.length - 1 ) + '-',
-							wrapBody[wrapBody.length] = w3;
-						}else{
-							wrapSel[wrapSel.length] = w2;
-							if( w4 ){
-								for( w3 = w3.split(';'), w5 = wrapBody.length - 1, o = 0, p = w3.length ; o < p ; o++ ) if( w6 = w3[o].replace( trim, '' ) ) wrapBody[w5] += w4 + w6 + ';';
-								w4 = 0;
-							}else wrapBody[wrapBody.length] = w3;
-						}
-						m = n + 1;
-					}
-					w3 = val.substr(m).replace( trim, '' );
-					if( w4 ){
-						for( w3 = w3.split(';'), w5 = wrapBody.length - 1, o = 0, p = w3.length ; o < p ; o++ ) if( w6 = w3[o].replace( trim, '' ) ) wrapBody[w5] += w4 + w6 + ';';
-						w4 = 0;
-					}else wrapBody[wrapBody.length] = w3;
-					for( k = 0, l = wrapSel.length ; k < l ; k++ ){
-						css( wrapSel[k], wrapBody.slice( 0, k + 1 ).join('') );
-					}
-					i += l;
-				}else css( sel, val );
+	pAdd = function( v, arg ){
+		var i, j;
+		if( v.indexOf('@include') === 0 ){
+			v = ( i = v.indexOf('(') ) > -1 ? 
+				MIX[v.substring( 8, i ).replace( trim, '' )].apply( null, v.substring( i + 1, v.lastIndexOf(')') ).split(',') ) :
+				MIX[v.substr(8).replace( trim, '' )]();
+			for( v = v.split(';'), i = 0, j = v.length ; i < j ; i++ ) pAdd( v[i], arg );
+		}else if( v.indexOf('@extend') === 0 ){
+		}else if( v = v.replace( trim, '' ) ){
+			arg[arg.length] = v.substring( 0, i = v.indexOf(':') ).replace( trim, '' ), 
+			v = v.substr( i + 1 ).replace( trim, ''), v = VAR[v] || v,
+			arg[arg.length] = rNum.test(v) ? parseFloat(v) : v;
+		}
+	},
+	pData = function( v, depth, sels, bodys ){
+		var i, j;
+		for( v = v.replace( trim, '' ).split('}'), i = 0, j = v.length ; i < j ; i++ ){
+			if( depth && v[i] ) bodys[sels[depth - 1]] += v[i].replace( trim, '' );
+			depth--;
+		}
+		return depth + 1;
+	},
+	parser = function( v ){
+		var sels = [], bodys = {}, parent = {}, sorts = [], depth, self, c, t0, t1, i, j, k, l, w0, w1, w2;
+		v = v.replace( rMIX, fMIX ).replace( rVAL, fVAL );
+		depth = i = j = 0;
+		while( ( j = v.indexOf( '{' , j ) ) > -1 ){
+			w0 = v.substring( i, j ).replace( trim, '' ),
+			bodys[w2 = ( w1 = w0.match(rSel) ) ? w1[0].substr(1).replace( trim, '' ) : w0] = '',
+			parent[w2] = sels.slice( 0, depth = pData( w0.substring( 0, w0.indexOf(w2) ), depth, sels, bodys ) ),
+			sels[depth] = w2, i = ++j, depth++;
+		}
+		pData( v.substring(i), depth, sels, bodys );
+		for( k in parent ){
+			t0 = parent[k];
+			if( i = t0.length ) i--, t1 = sorts[i] || ( sorts[i] = [] ), t1[t1.length] = [k, t0[i]];
+		}
+		for( i = 0, j = sorts.length ; i < j ; i++ )
+			for( t0 = sorts[i], k = 0, l = t0.length ; k < l ; k++ ){
+				self = t0[k][0], parent = t0[k][1], bodys[t1 = self.replace( rParent, parent )] = bodys[parent] + bodys[self];
+				if( t1 != t0[k][0] ) delete bodys[self];
 			}
+		for( k in bodys ){
+			console.log( k, bodys[k] );
+			if( k.indexOf('@') == -1 ){
+				for( c = bs.Css(k), v = bodys[k].split(';'), sels.length = i = 0, j = v.length; i < j ; i++ ) if( t0 = v[i].replace( trim, '' ) ) pAdd( t0, sels );
+				c.S.apply( c, sels );
+			}else if( sel.substr( 0, 9 ) == 'font-face' ) bs.Css( k + ' ' + v );
 		}
 		if( !bs.cls ) bs.Css.flush();
-	},
-	carg = [], css = function( sel, v ){
-		var c, t0, i, j, k, l;
-		if( sel.indexOf('@') == -1 ){
-			for( c = bs.Css(sel), v = v.split(';'), carg.length = 0, i = 0, j = v.length; i < j ; i++ ){
-				if( t0 = v[i].replace( trim, '' ) ){
-					if( t0.indexOf('@include') === 0 ){
-						t0 = ( k = t0.indexOf('(') ) > -1 ? 
-							MIX[t0.substring( 8, k ).replace( trim, '' )].apply( null, t0.substring( k + 1, t0.lastIndexOf(')') ).split(',') ) :
-							MIX[t0.substr(8).replace( trim, '' )]();
-						for( t0 = t0.split(';'), k = 0, l = t0.length ; k < l ; k++ ) add( carg, t0[k] );
-					}else if( t0.indexOf('@extend') === 0 ){
-					}else add( carg, t0 );
-				}
-			};
-			c.S.apply( c, carg );
-		}else if( sel.substr( 0, 9 ) == 'font-face' ) bs.Css( sel + ' ' + val.replace( trim, '' ) );
-	},
-	add = function( arg, v ){
-		var i, j;
-		if( v = v.replace( trim, '' ) ){
-			arg[arg.length] = v.substring( 0, i = v.indexOf(':') ).replace( trim, '' ), 
-			v = v.substr( i + 1 ).replace( trim, ''),
-			v = VAR[v] || v,
-			arg[arg.length] = r.test(v) ? parseFloat(v) : v;
-		}
 	};
 	return bs.cls ? function(v){v.substr( v.length - 4 ) == '.css' ? bs.get( parser, v ) : parser(v);} : parser;
 })( /^\s*|\s*$/g, {
@@ -108,7 +95,6 @@ var bsSass = (function( trim, bs ){
 		c.flush = function(){
 			var t0 = document.createElement('style');
 			t0.innerHTML = r;
-			console.log(r);
 			document.getElementsByTagName('head')[0].appendChild( t0 );
 		};
 		return c;
