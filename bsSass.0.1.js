@@ -34,7 +34,25 @@ var bsSass = (function( trim, bs ){
 			for( c = 'rgba(', i = 0 ; i < 3 ; i++ ) k = ( v[i] = v[i].replace( trim, '' ) ) ? parseFloat(v[i]) : 0, c += ( k > 255 ? 255 : k ) + ',';
 			return c + ( k = ( k = v[4].replace( trim, '' ) ) ? parseFloat(k) : 0, k > 1 ? 1 : k < 0 ? 0 : k ) + ')';
 		},
-		hsl:function(v){},
+		hsl:(function(){
+			// source from : https://github.com/Asdfjs/Asdf/blob/master/src/common/util/Color.js
+			var hue2rgb = function(p, q, t){
+				if( t < 0 ) t += 1;
+				if( t > 1 ) t -= 1;
+				if( t < 1 / 6 ) return p + (q - p) * 6 * t;
+				if (t < 1 / 2) return q;
+				if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+				return p;
+			};
+			return function(v){
+				var h = ( v[0] = v[0].replace( trim, '' ) ) ? v[0] - 0 : 0,
+				s = ( v[1] = v[1].replace( trim, '' ) ) ? parseFloat(v[1]) : 0,
+				l = ( v[2] = v[2].replace( trim, '' ) ) ? parseFloat(v[2]) : 0,
+				p = l < 0.5 ? l * (1 + s) : l + s - l * s,
+				q = 2 * l - q;
+				return v[0] = hue2rgb(p, q, h + 1 / 3), v[1] = hue2rgb(p, q, h), v[2] = hue2rgb(p, q, h - 1 / 3), this.rgb(v);
+			};
+		})(),
 		hsla:function(v){},
 		mix:function(v){},
 		lighten:function(v){},
