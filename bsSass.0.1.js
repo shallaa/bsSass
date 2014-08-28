@@ -5,9 +5,9 @@
  */
 var bsSass = (function( trim, bs ){
 	'use strict';
-	var rNum = /^[0-9.-]+$/, rSel = /[};][^};]+$/g, rParent = /[&]/g,
-	VAR = {}, rVAL = /\$[^;:]+[:][^;:]+;/g, fVAL = function(v){return v = v.substring( 0, v.length - 1 ).split(':'), VAR[v[0]] = v[1], '';},
-	MIX = {}, rMIX = /[@]mixin [^@{]+[{][^@{()}]+[}]/g, fMIX = function(v){
+	var rNum = /^[-]?[0-9.]+$/, rSel = /[};][^};]+$/g, rParent = /[&]/g,
+	VAR = {}, rVAL = /\$[^;:]+[:][^;:]+;/g, fVAL = function(v){return v = v.substring( 0, v.length - 1 ).split(':'), VAR[v[0]] = pVal(v[1]), '';},
+	MIX = {}, rMIX = /[@]mixin [^@{]+[{][^}]+[}]/g, fMIX = function(v){
 		var n, arg = '', b, i;
 		v = v.substr(7).split('{'), n = v[0].replace( trim, '' );
 		if( ( i = n.indexOf('(') ) > -1 ) arg = n.substring( i + 1, n.lastIndexOf(')') ).replace( trim, '' ), n = n.substring( 0, i ).replace( trim, '' );
@@ -23,7 +23,36 @@ var bsSass = (function( trim, bs ){
 		} ).toString(), i.substring( i.indexOf('var') - 1, i.lastIndexOf('}') ) ) )( b, arg.split(','), trim );
 		return '';
 	},
+	FUNC = {
+		rgb:function(v){
+			var c, i, k;
+			for( c = '#', i = 0 ; i < 3 ; i++ ) k = ( v[i] = v[i].replace( trim, '' ) ) ? parseFloat(v[i]) : 0, c += ( k > 255 ? 255 : k ).toString(16);
+			return c;
+		},
+		rgba:function(v){
+			var c, i, k;
+			for( c = 'rgba(', i = 0 ; i < 3 ; i++ ) k = ( v[i] = v[i].replace( trim, '' ) ) ? parseFloat(v[i]) : 0, c += ( k > 255 ? 255 : k ) + ',';
+			return c + ( k = ( k = v[4].replace( trim, '' ) ) ? parseFloat(k) : 0, k > 1 ? 1 : k < 0 ? 0 : k ) + ')';
+		},
+		hsl:function(v){},
+		hsla:function(v){},
+		mix:function(v){},
+		lighten:function(v){},
+		darken:function(v){},
+		saturate:function(v){},
+		desaturate:function(v){},
+		grascale:function(v){},
+		invert:function(v){},
+		complement:function(v){}
+	},
 	extend, rExtend = /[@]extend (.+)[;]/g, fExtend = function( $0, v ){return extend[v] || '';},
+	pVal = function(v){
+		var i, j;
+		v = ( i = v.indexOf('(') ) > -1 && ( j = FUNC[v.substring( 0, i )] ) ?
+			j( v.substring( i + 1, v.lastIndexOf(')') ).split(',') ) :
+			VAR[v] === undefined ? v : VAR[v];
+		return rNum.test(v) ? parseFloat(v) : v;
+	},
 	pAdd = function( v, arg, bodys ){
 		var i, j;
 		if( v.indexOf('@include') === 0 ){
@@ -32,9 +61,8 @@ var bsSass = (function( trim, bs ){
 				MIX[v.substr(8).replace( trim, '' )]();
 			for( v = v.split(';'), i = 0, j = v.length ; i < j ; i++ ) pAdd( v[i], arg, bodys );
 		}else if( v = v.replace( trim, '' ) ){
-			arg[arg.length] = j = v.substring( 0, i = v.indexOf(':') ).replace( trim, '' );
-			v = v.substr( i + 1 ).replace( trim, ''), v = VAR[v] || v,
-			arg[arg.length] = rNum.test(v) ? parseFloat(v) : v;
+			arg[arg.length] = v.substring( 0, i = v.indexOf(':') ).replace( trim, '' ),
+			arg[arg.length] = pVal(v.substr( i + 1 ).replace( trim, ''));
 		}
 	},
 	pData = function( v, depth, sels, bodys ){
@@ -63,42 +91,36 @@ var bsSass = (function( trim, bs ){
 		for( i = 0, j = sorts.length ; i < j ; i++ )
 			for( t0 = sorts[i], k = 0, l = t0.length ; k < l ; k++ ){
 				self = t0[k][0], parent = t0[k][1], bodys[t1 = self.replace( rParent, parent )] = bodys[parent] + bodys[self];
-				if( t1 != t0[k][0] ) delete bodys[self];
+				if( t1 != self ) delete bodys[self];
 			}
 		extend = bodys;
 		for( k in bodys ) bodys[k] = bodys[k].replace( rExtend, fExtend );
 		for( k in bodys ){
 			if( k.indexOf('@') == -1 ){
 				if( k.charAt(0) == '%' ) continue;
-				console.log( k, bodys[k] );
 				for( c = bs.Css(k), v = bodys[k].split(';'), sels.length = i = 0, j = v.length; i < j ; i++ ) if( t0 = v[i].replace( trim, '' ) ) pAdd( t0, sels, bodys );
 				c.S.apply( c, sels );
+				console.log( k, sels );
 			}else if( sel.substr( 0, 9 ) == 'font-face' ) bs.Css( k + ' ' + v );
 		}
 		if( !bs.cls ) bs.Css.flush();
 	};
 	return bs.cls ? function(v){v.substr( v.length - 4 ) == '.css' ? bs.get( parser, v ) : parser(v);} : parser;
 })( /^\s*|\s*$/g, {
-	trim:function(v){
-		var i = v.length;
-		while(i--) v[i].replace( /^\s*|\s*$/g, '' );
-		return v;
-	},
 	Css:(function(){
 		var r = '', c = function(sel){
 			r += sel + '{';
 			return s;
-		}, s = {
-			S:function(){
-				var i = 0, j = arguments.length;
-				while( i < j ) r += arguments[i++] + ':' + arguments[i++] + ';'
-				r += '}';	
-			}
-		};
+		}, s = {S:function(){
+			var i = 0, j = arguments.length;
+			while( i < j ) r += arguments[i++] + ':' + arguments[i++] + ';'
+			r += '}';	
+		}};
 		c.flush = function(){
 			var t0 = document.createElement('style');
 			t0.innerHTML = r;
 			document.getElementsByTagName('head')[0].appendChild( t0 );
+			r = '';
 		};
 		return c;
 	})()
