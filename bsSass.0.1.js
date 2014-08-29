@@ -146,7 +146,7 @@ bsSass.fn( 'function',
 	'_shadeColor', function( c, a ){
 		var f, t, p, R, G, B;
 		if( !c.indexOf('hsl') );// TODO : hsl(...)
-		if( c.length != 3 ) while( c.length < 8 ) c += '0';
+		if( c.length != 5 ) while( c.length < 8 ) c += '0';
 		f = this._num(c), t = a < 0 ? 0 : 255, p = a < 0 ? a * -1 : a, R = f >> 16, G = f >> 8&0x00FF, B = f&0x0000FF;
     return "0x" + ( 0x1000000 + ( Math.round( ( t - R ) * p ) + R ) * 0x10000 + ( Math.round( ( t - G ) * p ) + G ) * 0x100 + ( Math.round( ( t - B ) * p ) + B ) ).toString(16).substr(1);
 	},
@@ -183,6 +183,7 @@ bsSass.fn( 'function',
 		i = 2;
 		while( i-- ){
 			if( !v[i].indexOf('rgb') );// TODO : rgb(...)
+			if( v[i].length != 5 ) while( v[i].length < 8 ) v[i] += '0';
 			v[i] = this._num(v[i]);
 		}
 		f = v[0], l = v[1], w = this._num(v[2]),
