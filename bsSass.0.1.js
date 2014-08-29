@@ -1,4 +1,4 @@
-/* bsSass v0.1.3
+/* bsSass v0.1.4
  * Copyright (c) 2013 by ProjectBS Committe and contributors. 
  * http://www.bsplugin.com All rights reserved.
  * Licensed under the BSD license. See http://opensource.org/licenses/BSD-3-Clause
@@ -23,17 +23,7 @@ var bsSass = (function( trim, bs, isDebug ){
 		} ).toString(), i.substring( i.indexOf('var') - 1, i.lastIndexOf('}') ) ) )( b, arg.split(','), trim );
 		return '';
 	},
-	FUNC = {
-		_num:function(v){
-			var i;
-			if( v.splice ){
-				i = v.length;
-				while( i-- ) typeof v[i] == 'string' ? ( v[i] = ( v[i] = v[i].replace( trim, '' ) ) ? v[i].charAt( v[i].length - 1 ) == '%' ? parseFloat( v[i].substring(0, v[i].length - 1 ) ) * .01 : v[i].substr( 0, 2 ) == '0x' ? parseInt( v[i], 16 ) : parseFloat(v[i]) : 0 ) : 0;
-				return v;
-			}
-			return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? v.charAt( v.length - 1 ) == '%' ? parseFloat( v.substring(0, v.length - 1 ) ) * .01 : v.substr( 0, 2 ) == '0x' ? parseInt( v, 16 ) : parseFloat(v) : 0 : v;
-		}
-	},
+	FUNC = {},
 	imports = [], rImport = /[@]import ['"]?([^'"]+)['"][;]/g, fImport = function( g, v ){
 		return imports[g = imports.length] = v.indexOf('.') == -1 ? v + '.css' : v, '@I' + g + 'I@';
 	},
@@ -102,7 +92,7 @@ var bsSass = (function( trim, bs, isDebug ){
 					continue;
 				}
 				for( v = bodys[k].split(';'), sels.length = i = 0, j = v.length; i < j ; i++ ) if( t0 = v[i].replace( trim, '' ) ) pAdd( t0, sels, bodys );
-				if( isDebug ) console.log( k, sels );
+				if( isDebug ) console.log( k, '{', sels, '}' );
 				w0 += k + '{' + css(sels) + '}\n';
 			}else w0 += k + '{' + bodys[k] + '}';
 		}
@@ -141,6 +131,15 @@ var bsSass = (function( trim, bs, isDebug ){
 // http://www.sass-lang.com/documentation/Sass/Script/Functions.html
 builtinFunction:
 bsSass.fn( 'function',
+	'_num', function(v){
+		var i;
+		if( v.splice ){
+			i = v.length;
+			while( i-- ) typeof v[i] == 'string' ? ( v[i] = ( v[i] = v[i].replace( trim, '' ) ) ? v[i].charAt( v[i].length - 1 ) == '%' ? parseFloat( v[i].substring(0, v[i].length - 1 ) ) * .01 : v[i].substr( 0, 2 ) == '0x' ? parseInt( v[i], 16 ) : parseFloat(v[i]) : 0 ) : 0;
+			return v;
+		}
+		return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? v.charAt( v.length - 1 ) == '%' ? parseFloat( v.substring(0, v.length - 1 ) ) * .01 : v.substr( 0, 2 ) == '0x' ? parseInt( v, 16 ) : parseFloat(v) : 0 : v;
+	},
 	'rgb', function(v){
 		var c, i, k;
 		for( c = '#', i = 0 ; i < 3 ; i++ ) k = ( v[i] = this._num(v[i]) ), c += k ? ( k > 255 ? 255 : k ).toString(16) : '00';
