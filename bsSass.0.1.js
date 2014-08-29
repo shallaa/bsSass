@@ -26,7 +26,13 @@ var bsSass = (function( trim, bs ){
 	FUNC = {
 		rgb:function(v){
 			var c, i, k;
-			for( c = '#', i = 0 ; i < 3 ; i++ ) k = ( v[i] = v[i].replace( trim, '' ) ) ? parseFloat(v[i]) : 0, c += ( k > 255 ? 255 : k ).toString(16);
+			if( v[0].indexOf('hsla') > -1 ){
+				
+			}else if( v[0].indexOf('hsl') > -1 ){
+				
+			}else{
+				for( c = '#', i = 0 ; i < 3 ; i++ ) k = ( v[i] = v[i].replace( trim, '' ) ) ? parseFloat(v[i]) : 0, c += ( k > 255 ? 255 : k ).toString(16);
+			}
 			return c;
 		},
 		rgba:function(v){
@@ -34,7 +40,9 @@ var bsSass = (function( trim, bs ){
 			for( c = 'rgba(', i = 0 ; i < 3 ; i++ ) k = ( v[i] = v[i].replace( trim, '' ) ) ? parseFloat(v[i]) : 0, c += ( k > 255 ? 255 : k ) + ',';
 			return c + ( k = ( k = v[4].replace( trim, '' ) ) ? parseFloat(k) : 0, k > 1 ? 1 : k < 0 ? 0 : k ) + ')';
 		},
-		hsl:function(v){},
+		hsl:function(v){
+			
+		},
 		hsla:function(v){},
 		mix:function(v){},
 		lighten:function(v){},
