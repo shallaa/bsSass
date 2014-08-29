@@ -94,19 +94,26 @@ var bsSass = (function( trim, bs, isDebug ){
 			}
 		extend = bodys;
 		for( k in bodys ) bodys[k] = bodys[k].replace( rExtend, fExtend );
+		w0 = '';
 		for( k in bodys ){
 			if( k.indexOf('@') == -1 ){
 				if( k.charAt(0) == '%' ){
 					placeholder[k] = bodys[k];
 					continue;
 				}
-				for( c = bs.Css(k), v = bodys[k].split(';'), sels.length = i = 0, j = v.length; i < j ; i++ ) if( t0 = v[i].replace( trim, '' ) ) pAdd( t0, sels, bodys );
-				c.S.apply( c, sels );
+				for( v = bodys[k].split(';'), sels.length = i = 0, j = v.length; i < j ; i++ ) if( t0 = v[i].replace( trim, '' ) ) pAdd( t0, sels, bodys );
 				if( isDebug ) console.log( k, sels );
-			}else if( sel.substr( 0, 9 ) == 'font-face' ) bs.Css( k + ' ' + v );
+				w0 += k + '{' + css(sels) + '}\n';
+			}else w0 += k + '{' + bodys[k] + '}';
 		}
+		( w1 = document.createElement('style') ).innerHTML = w0, document.getElementsByTagName('head')[0].appendChild(w1);
 	},
-	f = function(v){v.substr( v.length - 4 ) == '.css' ? bs.get( parser, v ) : parser(v); bs.Css.flush();};
+	css = function(v){
+		var r = '', i = 0, j = v.length;
+		while( i < j ) r += v[i++] + ':' + v[i++] + ';'
+		return r;
+	},
+	f = function(v){v.substr( v.length - 4 ) == '.css' ? bs.get( parser, v ) : parser(v);};
 	return f.fn = (function(){
 		var t = {mixin:MIX, 'var':VAR, 'function':FUNC};
 		return function( type ){
@@ -115,20 +122,6 @@ var bsSass = (function( trim, bs, isDebug ){
 		};
 	})(), f;
 })( /^\s*|\s*$/g, {
-	Css:(function(){
-		var r = '', c = function(sel){
-			return r += sel + '{', s;
-		}, s = {S:function(){
-			var i = 0, j = arguments.length;
-			while( i < j ) r += arguments[i++] + ':' + arguments[i++] + ';'
-			r += '}';	
-		}};
-		c.flush = function(){
-			var t0 = document.createElement('style');
-			t0.innerHTML = r, r = '', document.getElementsByTagName('head')[0].appendChild( t0 );
-		};
-		return c;
-	})(),
 	get:(function(xhr){
 		return xhr = window['XMLHttpRequest'] ? function(){return new XMLHttpRequest;} : (function(){
 			var t0 = 'MSXML2.XMLHTTP.', i, j;
