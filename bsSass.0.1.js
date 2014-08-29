@@ -28,10 +28,10 @@ var bsSass = (function( trim, bs, isDebug ){
 			var i;
 			if( v.splice ){
 				i = v.length;
-				while( i-- ) typeof v[i] == 'string' ? ( v[i] = ( v[i] = v[i].replace( trim, '' ) ) ? v[i].charAt( v[i].length - 1 ) == '%' ? parseFloat( v[i].substring(0, v[i].length - 1 ) ) * .01 : parseFloat(v[i]) : 0 ) : 0;
+				while( i-- ) typeof v[i] == 'string' ? ( v[i] = ( v[i] = v[i].replace( trim, '' ) ) ? v[i].charAt( v[i].length - 1 ) == '%' ? parseFloat( v[i].substring(0, v[i].length - 1 ) ) * .01 : v[i].substr( 0, 2 ) == '0x' ? parseInt( v[i], 16 ) : parseFloat(v[i]) : 0 ) : 0;
 				return v;
 			}
-			return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? v.charAt( v.length - 1 ) == '%' ? parseFloat( v.substring(0, v.length - 1 ) ) * .01 : parseFloat(v) : 0 : v;
+			return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? v.charAt( v.length - 1 ) == '%' ? parseFloat( v.substring(0, v.length - 1 ) ) * .01 : v.substr( 0, 2 ) == '0x' ? parseInt( v, 16 ) : parseFloat(v) : 0 : v;
 		}
 	},
 	extend, rExtend = /[@]extend (.+)[;]/g, fExtend = function( g, v ){return extend[v] || '';},
@@ -148,7 +148,20 @@ bsSass.fn( 'function',
 		};
 	})(),
 	'hsla', function(v){return this.hsl(v), this.rgba(v);},
-	'mix', function(v){},
+	'mix', function(v){
+		var f, l, w, i, r;
+		i = 2;
+		while( i-- ){
+			if( !v[i].indexOf('rgb') );// TODO : rgb(...)
+			else
+				while( v[i].length < 8 ) v[i] += '0';
+			v[i] = this._num(v[i]);
+		}
+		f = v[0], l = v[1], w = this._num(v[2]),
+		r = ( ( w ? f * w + l * ( 1 - w ) : f + l ) / 2 ).toString(16);
+		while( r.length < 6 ) r = '0' + r;
+		return r;
+	},
 	'lighten', function(v){},
 	'darken', function(v){},
 	'saturate', function(v){},
