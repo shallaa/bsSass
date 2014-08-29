@@ -34,7 +34,11 @@ var bsSass = (function( trim, bs, isDebug ){
 			return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? v.charAt( v.length - 1 ) == '%' ? parseFloat( v.substring(0, v.length - 1 ) ) * .01 : parseFloat(v) : 0 : v;
 		}
 	},
+	imports = [], rImport = /[@]import ['"]?([^'"]+)['"][;]/g, fImport = function( g, v ){
+		return imports[g = imports.length] = v.indexOf('.') == -1 ? v + '.css' : v, '@I' + g + 'I@';
+	},
 	extend, rExtend = /[@]extend (.+)[;]/g, fExtend = function( g, v ){return extend[v] || '';},
+	placeholder = {},
 	pVal = function(v){
 		var i, j;
 		v = ( i = v.indexOf('(') ) > -1 && ( FUNC[j = v.substring( 0, i )] ) ?
@@ -63,8 +67,14 @@ var bsSass = (function( trim, bs, isDebug ){
 		return depth + 1;
 	},
 	parser = function( v ){
-		var sels = [], bodys = {}, parent = {}, sorts = [], depth, self, c, t0, t1, i, j, k, l, w0, w1, w2;
-		v = v.replace( rMIX, fMIX ).replace( rVAL, fVAL );
+		var imported, sels, bodys, parent, sorts, depth, self, c, t0, t1, i, j, k, l, w0, w1, w2;
+		imports.length = 0,
+		v = v.replace( rImport, fImport ).replace( rMIX, fMIX ).replace( rVAL, fVAL );
+		if( imports.length ) return ( imported = function(data){
+			data && ( v = v.replace( '@I' + imports.length + 'I@', data ) ), imports.length ? bs.get( imported, imports.pop() ) : parser(v);
+		})();
+		sels = [], bodys = {}, parent = {}, sorts = [];
+		for( k in placeholder ) bodys[k] = placeholder[k];
 		depth = i = j = 0;
 		while( ( j = v.indexOf( '{' , j ) ) > -1 ){
 			w0 = v.substring( i, j ).replace( trim, '' ),
@@ -86,14 +96,17 @@ var bsSass = (function( trim, bs, isDebug ){
 		for( k in bodys ) bodys[k] = bodys[k].replace( rExtend, fExtend );
 		for( k in bodys ){
 			if( k.indexOf('@') == -1 ){
-				if( k.charAt(0) == '%' ) continue;
+				if( k.charAt(0) == '%' ){
+					placeholder[k] = bodys[k];
+					continue;
+				}
 				for( c = bs.Css(k), v = bodys[k].split(';'), sels.length = i = 0, j = v.length; i < j ; i++ ) if( t0 = v[i].replace( trim, '' ) ) pAdd( t0, sels, bodys );
 				c.S.apply( c, sels );
 				if( isDebug ) console.log( k, sels );
 			}else if( sel.substr( 0, 9 ) == 'font-face' ) bs.Css( k + ' ' + v );
 		}
 	},
-	f = bs.cls ? function(v){v.substr( v.length - 4 ) == '.css' ? bs.get( parser, v ) : parser(v);} : function(v){parser(v),bs.Css.flush();};
+	f = function(v){v.substr( v.length - 4 ) == '.css' ? bs.get( parser, v ) : parser(v); bs.Css.flush();};
 	return f.fn = (function(){
 		var t = {mixin:MIX, 'var':VAR, 'function':FUNC};
 		return function( type ){
@@ -115,6 +128,26 @@ var bsSass = (function( trim, bs, isDebug ){
 			t0.innerHTML = r, r = '', document.getElementsByTagName('head')[0].appendChild( t0 );
 		};
 		return c;
+	})(),
+	get:(function(){
+		var xhr;
+		return xhr = window['XMLHttpRequest'] ? function(){return new XMLHttpRequest;} : (function(){
+			var t0 = 'MSXML2.XMLHTTP.', i, j;
+			t0 = ['Microsoft.XMLHTTP', t0, t0 + '3.0', t0 + '4.0', t0 + '5.0'], i = t0.length;
+			while( i-- ){
+				try{new ActiveXObject( j = t0[i] );}catch($e){continue;}
+				break;
+			}
+			return function(){return new ActiveXObject(j);};
+		})(), function( end, url ){
+			var t0 = xhr();
+			t0.onreadystatechange = function(){
+				if( t0.readyState != 4 ) return;
+				end( t0.status == 200 || t0.status == 0 ? t0.responseText : '' );
+			};
+			t0.open( 'GET', url, false );
+			t0.send('');
+		};
 	})()
 }, true );
 

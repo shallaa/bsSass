@@ -164,6 +164,15 @@ $back:#aaf;
 	color:hsl( 60, 100%, 25% );
 }
 </script>
+<script id="g" type="text/scss">
+@import 'import.css';
+.a2{
+	@extend .a;
+	@extend %btn;
+	margin:7;
+}
+</script>
+
 <script>
 /*
 bsSass( document.getElementById('a').text );
@@ -173,7 +182,8 @@ bsSass( document.getElementById('c').text );
 //bsSass( document.getElementById('d').text );
 bsSass( document.getElementById('e').text );
 */
-bsSass( document.getElementById('f').text );
+//bsSass( document.getElementById('f').text );
+bsSass( document.getElementById('g').text );
 </script>
 </body>
 </html>
