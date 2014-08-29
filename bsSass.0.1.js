@@ -129,24 +129,18 @@ var bsSass = (function( trim, bs, isDebug ){
 		};
 		return c;
 	})(),
-	get:(function(){
-		var xhr;
+	get:(function(xhr){
 		return xhr = window['XMLHttpRequest'] ? function(){return new XMLHttpRequest;} : (function(){
 			var t0 = 'MSXML2.XMLHTTP.', i, j;
 			t0 = ['Microsoft.XMLHTTP', t0, t0 + '3.0', t0 + '4.0', t0 + '5.0'], i = t0.length;
-			while( i-- ){
-				try{new ActiveXObject( j = t0[i] );}catch($e){continue;}
-				break;
-			}
+			while( i-- ){try{new ActiveXObject( j = t0[i] );}catch($e){continue;}break;}
 			return function(){return new ActiveXObject(j);};
 		})(), function( end, url ){
 			var t0 = xhr();
 			t0.onreadystatechange = function(){
 				if( t0.readyState != 4 ) return;
 				end( t0.status == 200 || t0.status == 0 ? t0.responseText : '' );
-			};
-			t0.open( 'GET', url, false );
-			t0.send('');
+			}, t0.open( 'GET', url, false ), t0.send('');
 		};
 	})()
 }, true );
