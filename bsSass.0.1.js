@@ -117,7 +117,7 @@ var bsSass = (function( trim, bs, isDebug ){
 		return c;
 	})()
 }, true );
-
+// http://www.sass-lang.com/documentation/Sass/Script/Functions.html
 builtinFunction:
 bsSass.fn( 'function',
 	'rgb', function(v){
