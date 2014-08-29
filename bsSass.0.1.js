@@ -181,7 +181,16 @@ bsSass.fn( 'function',
 		while( r.length < 6 ) r = '0' + r;
 		return '0x' + r;
 	},
-	'lighten', function(v){},
+	'lighten', function(v){
+		var c, a, i, r, g, b;
+		if( !v[0].indexOf('hsl') );// TODO : hsl(...)
+		else while( v[0].length < 8 ) v[0] += '0';
+		c = v[0], a = v[1], r = c.substr( 2, 2 ), g = c.substr( 4, 2 ), b = c.substr( 6, 2 );
+		return '0x' + 
+			( ( 0 | ( 1 << 8 ) + r + ( 256 - r ) * a ).toString(16)).substr(1) +
+			( ( 0 | ( 1 << 8 ) + g + ( 256 - g ) * a ).toString(16)).substr(1) +
+			( ( 0 | ( 1 << 8 ) + b + ( 256 - b ) * a ).toString(16)).substr(1);
+	},
 	'darken', function(v){},
 	'saturate', function(v){},
 	'desaturate', function(v){},
