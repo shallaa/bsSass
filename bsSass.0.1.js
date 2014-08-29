@@ -106,7 +106,8 @@ var bsSass = (function( trim, bs, isDebug ){
 				w0 += k + '{' + css(sels) + '}\n';
 			}else w0 += k + '{' + bodys[k] + '}';
 		}
-		( w1 = document.createElement('style') ).innerHTML = w0, document.getElementsByTagName('head')[0].appendChild(w1);
+		document.getElementsByTagName('head')[0].appendChild( w1 = document.createElement('style') ),
+		w1['styleSheet'] ? ( w1['styleSheet'].cssText = w0 ) : ( w1.innerHTML = w0 );
 	},
 	css = function(v){
 		var r = '', i = 0, j = v.length;
