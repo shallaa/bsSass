@@ -131,14 +131,24 @@ var bsSass = (function( trim, bs, isDebug ){
 // http://www.sass-lang.com/documentation/Sass/Script/Functions.html
 builtinFunction:
 bsSass.fn( 'function',
-	'_num', function(v){
-		var i;
-		if( v.splice ){
-			i = v.length;
-			while( i-- ) typeof v[i] == 'string' ? ( v[i] = ( v[i] = v[i].replace( trim, '' ) ) ? v[i].charAt( v[i].length - 1 ) == '%' ? parseFloat( v[i].substring(0, v[i].length - 1 ) ) * .01 : v[i].substr( 0, 2 ) == '0x' ? parseInt( v[i], 16 ) : parseFloat(v[i]) : 0 ) : 0;
-			return v;
-		}
-		return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? v.charAt( v.length - 1 ) == '%' ? parseFloat( v.substring(0, v.length - 1 ) ) * .01 : v.substr( 0, 2 ) == '0x' ? parseInt( v, 16 ) : parseFloat(v) : 0 : v;
+	'_num', (function(){
+		var re = /(.)/g;
+		return function(v){
+			var i, t0;
+			if( v.splice ){
+				i = v.length;
+				while( i-- ) typeof v[i] == 'string' ? ( v[i] = ( v[i] = v[i].replace( trim, '' ) ) ? v[i].charAt( v[i].length - 1 ) == '%' ? parseFloat( v[i].substring(0, v[i].length - 1 ) ) * .01 : v[i].substr( 0, 2 ) == '0x' ? ( t0 = v[i].slice(2) ).length == 3 ? parseInt( '0x' + t0.replace( re, '$1$1' ), 16 ) : parseInt( v[i], 16 ) : parseFloat(v[i]) : 0 ) : 0;
+				return v;
+			}
+			return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? v.charAt( v.length - 1 ) == '%' ? parseFloat( v.substring(0, v.length - 1 ) ) * .01 : v.substr( 0, 2 ) == '0x' ? ( t0 = v.slice(2) ).length == 3 ? parseInt( '0x' + t0.replace( re, '$1$1' ), 16 ) : parseInt( v, 16 ) : parseFloat(v) : 0 : v;
+		};
+	})(),
+	'_shadeColor', function( c, a ){
+		var f, t, p, R, G, B;
+		if( !c.indexOf('hsl') );// TODO : hsl(...)
+		if( c.length != 3 ) while( c.length < 8 ) c += '0';
+		f = this._num(c), t = a < 0 ? 0 : 255, p = a < 0 ? a * -1 : a, R = f >> 16, G = f >> 8&0x00FF, B = f&0x0000FF;
+    return "0x" + ( 0x1000000 + ( Math.round( ( t - R ) * p ) + R ) * 0x10000 + ( Math.round( ( t - G ) * p ) + G ) * 0x100 + ( Math.round( ( t - B ) * p ) + B ) ).toString(16).substr(1);
 	},
 	'rgb', function(v){
 		var c, i, k;
@@ -173,7 +183,6 @@ bsSass.fn( 'function',
 		i = 2;
 		while( i-- ){
 			if( !v[i].indexOf('rgb') );// TODO : rgb(...)
-			else while( v[i].length < 8 ) v[i] += '0';
 			v[i] = this._num(v[i]);
 		}
 		f = v[0], l = v[1], w = this._num(v[2]),
@@ -182,16 +191,11 @@ bsSass.fn( 'function',
 		return '0x' + r;
 	},
 	'lighten', function(v){
-		var c, a, i, r, g, b;
-		if( !v[0].indexOf('hsl') );// TODO : hsl(...)
-		else while( v[0].length < 8 ) v[0] += '0';
-		c = v[0], a = v[1], r = c.substr( 2, 2 ), g = c.substr( 4, 2 ), b = c.substr( 6, 2 );
-		return '0x' + 
-			( ( 0 | ( 1 << 8 ) + r + ( 256 - r ) * a ).toString(16)).substr(1) +
-			( ( 0 | ( 1 << 8 ) + g + ( 256 - g ) * a ).toString(16)).substr(1) +
-			( ( 0 | ( 1 << 8 ) + b + ( 256 - b ) * a ).toString(16)).substr(1);
+		return this._shadeColor( v[0], this._num(v[1]) );
 	},
-	'darken', function(v){},
+	'darken', function(v){
+		return this._shadeColor( v[0], this._num(v[1]) * -1 );
+	},
 	'saturate', function(v){},
 	'desaturate', function(v){},
 	'grascale', function(v){},
