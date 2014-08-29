@@ -160,7 +160,7 @@ bsSass.fn( 'function',
 		f = v[0], l = v[1], w = this._num(v[2]),
 		r = ( ( w ? f * w + l * ( 1 - w ) : f + l ) / 2 ).toString(16);
 		while( r.length < 6 ) r = '0' + r;
-		return r;
+		return '0x' + r;
 	},
 	'lighten', function(v){},
 	'darken', function(v){},
