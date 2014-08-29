@@ -28,14 +28,13 @@ var bsSass = (function( trim, bs, isDebug ){
 			var i;
 			if( v.splice ){
 				i = v.length;
-				console.log('l', i );
-				while( i-- ) typeof v[i] == 'string' ? ( v[i] = ( v[i] = v[i].replace( trim, '' ) ) ? parseFloat(v[i]) : 0 ) : 0;
+				while( i-- ) typeof v[i] == 'string' ? ( v[i] = ( v[i] = v[i].replace( trim, '' ) ) ? v[i].charAt( v[i].length - 1 ) == '%' ? parseFloat( v[i].substring(0, v[i].length - 1 ) ) * .01 : parseFloat(v[i]) : 0 ) : 0;
 				return v;
 			}
-			return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? parseFloat(v) : 0 : v;
+			return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? v.charAt( v.length - 1 ) == '%' ? parseFloat( v.substring(0, v.length - 1 ) ) * .01 : parseFloat(v) : 0 : v;
 		}
 	},
-	extend, rExtend = /[@]extend (.+)[;]/g, fExtend = function( $0, v ){return extend[v] || '';},
+	extend, rExtend = /[@]extend (.+)[;]/g, fExtend = function( g, v ){return extend[v] || '';},
 	pVal = function(v){
 		var i, j;
 		v = ( i = v.indexOf('(') ) > -1 && ( FUNC[j = v.substring( 0, i )] ) ?
@@ -123,25 +122,29 @@ builtinFunction:
 bsSass.fn( 'function',
 	'rgb', function(v){
 		var c, i, k;
-		for( c = '#', i = 0 ; i < 3 ; i++ ) k = ( v[i] = this._num(v[i]) ), c += ( k > 255 ? 255 : k ).toString(16);
+		for( c = '#', i = 0 ; i < 3 ; i++ ) k = ( v[i] = this._num(v[i]) ), c += k ? ( k > 255 ? 255 : k ).toString(16) : '00';
 		return c;
 	},
 	'rgba', function(v){
 		var c, i, k;
-		for( this._num(v), c = 'rgba(', i = 0 ; i < 3 ; i++ ) c += ( v[i] > 255 ? 255 : v[i] ) + ',';
+		for( this._num(v), c = 'rgba(', i = 0 ; i < 3 ; i++ ) c += ( v[i] ? ( v[i] > 255 ? 255 : v[i] ) : '00' ) + ',';
 		return c + ( v[3] > 1 ? 1 : v[3] < 0 ? 0 : v[3] ) + ')';
 	},
 	'hsl', (function(){
 		var f = function( p, q, t ){
-			if( t < 0 ) t += 1;
-			if( t > 1 ) t -= 1;
-			return t < 1 / 6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2 / 3 ? p + ( q - p ) * ( 2 / 3 - t ) * 6 : p;
-		};
+			if(t < 0) t += 1; else if(t > 1) t -= 1;
+			return t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * ( 2 / 3 - t ) * 6 : p;
+		}
 		return function(v){
 			var h, s, l, p, q;
-			v = this._num(v), h = v[0], s = v[1], l = v[2],
-			p = l < 0.5 ? l * ( 1 + s ) : l + s - l * s, q = 2 * l - q;
-			return v[0] = f( p, q, h + 1 / 3 ), v[1] = f( p, q, h ), v[2] = f( p, q, h - 1 / 3 ), this.rgb(v);
+			v = this._num(v), s = v[1], l = v[2];
+			if( ( h = v[0] ) > 360 ) h -= parseInt( h / 360 ) * 360;
+			h /= 360;
+			if(s == 0) v[0] = v[1] = v[2] = l;
+			else p = 2 * l - ( q = l < .5 ? l * ( 1 + s ) : l + s - l * s ), v[0] = f( p, q, h + 1 / 3 ), v[1] = f( p, q, h ), v[2] = f( p, q, h - 1 / 3 );
+			p = 3;
+			while( p-- ) v[p] = Math.round( v[p] * 255 );
+			return this.rgb(v);
 		};
 	})(),
 	'hsla', function(v){return this.hsl(v), this.rgba(v);},
