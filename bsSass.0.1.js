@@ -173,8 +173,7 @@ bsSass.fn( 'function',
 		i = 2;
 		while( i-- ){
 			if( !v[i].indexOf('rgb') );// TODO : rgb(...)
-			else
-				while( v[i].length < 8 ) v[i] += '0';
+			else while( v[i].length < 8 ) v[i] += '0';
 			v[i] = this._num(v[i]);
 		}
 		f = v[0], l = v[1], w = this._num(v[2]),
