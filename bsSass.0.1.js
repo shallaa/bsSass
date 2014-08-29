@@ -3,7 +3,7 @@
  * http://www.bsplugin.com All rights reserved.
  * Licensed under the BSD license. See http://opensource.org/licenses/BSD-3-Clause
  */
-var bsSass = (function( trim, bs ){
+var bsSass = (function( trim, bs, isDebug ){
 	'use strict';
 	var rNum = /^[-]?[0-9.]+$/, rSel = /[};][^};]+$/g, rParent = /[&]/g,
 	VAR = {}, rVAL = /\$[^;:]+[:][^;:]+;/g, fVAL = function(v){return v = v.substring( 0, v.length - 1 ).split(':'), VAR[v[0]] = pVal(v[1]), '';},
@@ -24,40 +24,22 @@ var bsSass = (function( trim, bs ){
 		return '';
 	},
 	FUNC = {
-		rgb:function(v){
-			var c, i, k;
-			if( v[0].indexOf('hsla') > -1 ){
-				
-			}else if( v[0].indexOf('hsl') > -1 ){
-				
-			}else{
-				for( c = '#', i = 0 ; i < 3 ; i++ ) k = ( v[i] = v[i].replace( trim, '' ) ) ? parseFloat(v[i]) : 0, c += ( k > 255 ? 255 : k ).toString(16);
+		_num:function(v){
+			var i;
+			if( v.splice ){
+				i = v.length;
+				console.log('l', i );
+				while( i-- ) typeof v[i] == 'string' ? ( v[i] = ( v[i] = v[i].replace( trim, '' ) ) ? parseFloat(v[i]) : 0 ) : 0;
+				return v;
 			}
-			return c;
-		},
-		rgba:function(v){
-			var c, i, k;
-			for( c = 'rgba(', i = 0 ; i < 3 ; i++ ) k = ( v[i] = v[i].replace( trim, '' ) ) ? parseFloat(v[i]) : 0, c += ( k > 255 ? 255 : k ) + ',';
-			return c + ( k = ( k = v[4].replace( trim, '' ) ) ? parseFloat(k) : 0, k > 1 ? 1 : k < 0 ? 0 : k ) + ')';
-		},
-		hsl:function(v){
-			
-		},
-		hsla:function(v){},
-		mix:function(v){},
-		lighten:function(v){},
-		darken:function(v){},
-		saturate:function(v){},
-		desaturate:function(v){},
-		grascale:function(v){},
-		invert:function(v){},
-		complement:function(v){}
+			return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? parseFloat(v) : 0 : v;
+		}
 	},
 	extend, rExtend = /[@]extend (.+)[;]/g, fExtend = function( $0, v ){return extend[v] || '';},
 	pVal = function(v){
 		var i, j;
-		v = ( i = v.indexOf('(') ) > -1 && ( j = FUNC[v.substring( 0, i )] ) ?
-			j( v.substring( i + 1, v.lastIndexOf(')') ).split(',') ) :
+		v = ( i = v.indexOf('(') ) > -1 && ( FUNC[j = v.substring( 0, i )] ) ?
+			FUNC[j]( v.substring( i + 1, v.lastIndexOf(')') ).split(',') ) :
 			VAR[v] === undefined ? v : VAR[v];
 		return rNum.test(v) ? parseFloat(v) : v;
 	},
@@ -108,17 +90,22 @@ var bsSass = (function( trim, bs ){
 				if( k.charAt(0) == '%' ) continue;
 				for( c = bs.Css(k), v = bodys[k].split(';'), sels.length = i = 0, j = v.length; i < j ; i++ ) if( t0 = v[i].replace( trim, '' ) ) pAdd( t0, sels, bodys );
 				c.S.apply( c, sels );
-				console.log( k, sels );
+				if( isDebug ) console.log( k, sels );
 			}else if( sel.substr( 0, 9 ) == 'font-face' ) bs.Css( k + ' ' + v );
 		}
-		if( !bs.cls ) bs.Css.flush();
-	};
-	return bs.cls ? function(v){v.substr( v.length - 4 ) == '.css' ? bs.get( parser, v ) : parser(v);} : parser;
+	},
+	f = bs.cls ? function(v){v.substr( v.length - 4 ) == '.css' ? bs.get( parser, v ) : parser(v);} : function(v){parser(v),bs.Css.flush();};
+	return f.fn = (function(){
+		var t = {mixin:MIX, 'var':VAR, 'function':FUNC};
+		return function( type ){
+			var t0, i = 1, j = arguments.length;
+			if( t0 = t[type] ) while( i < j ) t0[arguments[i++]] = arguments[i++];
+		};
+	})(), f;
 })( /^\s*|\s*$/g, {
 	Css:(function(){
 		var r = '', c = function(sel){
-			r += sel + '{';
-			return s;
+			return r += sel + '{', s;
 		}, s = {S:function(){
 			var i = 0, j = arguments.length;
 			while( i < j ) r += arguments[i++] + ':' + arguments[i++] + ';'
@@ -126,10 +113,44 @@ var bsSass = (function( trim, bs ){
 		}};
 		c.flush = function(){
 			var t0 = document.createElement('style');
-			t0.innerHTML = r;
-			document.getElementsByTagName('head')[0].appendChild( t0 );
-			r = '';
+			t0.innerHTML = r, r = '', document.getElementsByTagName('head')[0].appendChild( t0 );
 		};
 		return c;
 	})()
-} );
+}, true );
+
+builtinFunction:
+bsSass.fn( 'function',
+	'rgb', function(v){
+		var c, i, k;
+		for( c = '#', i = 0 ; i < 3 ; i++ ) k = ( v[i] = this._num(v[i]) ), c += ( k > 255 ? 255 : k ).toString(16);
+		return c;
+	},
+	'rgba', function(v){
+		var c, i, k;
+		for( this._num(v), c = 'rgba(', i = 0 ; i < 3 ; i++ ) c += ( v[i] > 255 ? 255 : v[i] ) + ',';
+		return c + ( v[3] > 1 ? 1 : v[3] < 0 ? 0 : v[3] ) + ')';
+	},
+	'hsl', (function(){
+		var f = function( p, q, t ){
+			if( t < 0 ) t += 1;
+			if( t > 1 ) t -= 1;
+			return t < 1 / 6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2 / 3 ? p + ( q - p ) * ( 2 / 3 - t ) * 6 : p;
+		};
+		return function(v){
+			var h, s, l, p, q;
+			v = this._num(v), h = v[0], s = v[1], l = v[2],
+			p = l < 0.5 ? l * ( 1 + s ) : l + s - l * s, q = 2 * l - q;
+			return v[0] = f( p, q, h + 1 / 3 ), v[1] = f( p, q, h ), v[2] = f( p, q, h - 1 / 3 ), this.rgb(v);
+		};
+	})(),
+	'hsla', function(v){return this.hsl(v), this.rgba(v);},
+	'mix', function(v){},
+	'lighten', function(v){},
+	'darken', function(v){},
+	'saturate', function(v){},
+	'desaturate', function(v){},
+	'grascale', function(v){},
+	'invert', function(v){},
+	'complement', function(v){}
+);
