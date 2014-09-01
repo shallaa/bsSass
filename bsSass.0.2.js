@@ -132,7 +132,7 @@ var bsSass = (function( trim, bs, isDebug ){
 builtinFunction:
 bsSass.fn( 'function',
 	'_num', (function(){
-		var re = /(.)/g;
+		var re = /(.)/g, trim = /^\s*|\s*$/g;
 		return function(v){
 			var i, t0;
 			if( v.splice ){
@@ -143,14 +143,10 @@ bsSass.fn( 'function',
 			return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? v.charAt( v.length - 1 ) == '%' ? parseFloat( v.substring(0, v.length - 1 ) ) * .01 : v.substr( 0, 2 ) == '0x' ? ( t0 = v.slice(2) ).length == 3 ? parseInt( '0x' + t0.replace( re, '$1$1' ), 16 ) : parseInt( v, 16 ) : parseFloat(v) : 0 : v;
 		};
 	})(),
-	'_shadeColor', function( c, a ){
-		var t, p;
-		if( !c.indexOf('hsl') );// TODO : hsl(...)
-    return c = this._hex2rgb(c), t = a < 0 ? 0 : 255, p = a < 0 ? a * -1 : a, "0x" + ( 0x1000000 + ( Math.round( ( t - c[0] ) * p ) + c[0] ) * 0x10000 + ( Math.round( ( t - c[1] ) * p ) + c[1] ) * 0x100 + ( Math.round( ( t - c[2] ) * p ) + c[2] ) ).toString(16).substr(1);
-	},
 	'_hex2rgb', function( h ){
 		var f;
-		if( c.length != 5 ) while( c.length < 8 ) c += '0';
+		if( h.length != 5 ) while( h.length < 8 ) h += '0';
+		console.log(h)
 		return f = this._num(h), [ f>>16, f>>8&0x00FF, f&0x0000FF ];
 	},
 	'_rgb2hsl', function( r, b, g ){
@@ -173,6 +169,13 @@ bsSass.fn( 'function',
 	'_saturate', function( c, a ){
 		var t0 = this._hex2rgb(c);
 		return t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[1] += a, this.hsl(t0);
+	},
+	'_shade', function( c, a ){
+		var t0 = this._hex2rgb(c);
+		return t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[2] += a, this.hsl(t0);
+	},
+	'_shp2hex', function(v){
+		return v.replace( /^\s*|\s*$/g, '' ).replace( /^[#]/, '0x' );
 	},
 	'rgb', function(v){
 		var c, i, k;
@@ -207,19 +210,21 @@ bsSass.fn( 'function',
 		i = 2;
 		while( i-- ){
 			if( !v[i].indexOf('rgb') );// TODO : rgb(...)
+			v[i] = this._shp2hex(v[i]);
 			if( v[i].length != 5 ) while( v[i].length < 8 ) v[i] += '0';
-			v[i] = this._num(v[i]);
+			v[i] = this._hex2rgb(v[i]);
 		}
-		f = v[0], l = v[1], w = this._num(v[2]),
-		r = ( ( w ? f * w + l * ( 1 - w ) : f + l ) / 2 ).toString(16);
-		while( r.length < 6 ) r = '0' + r;
+		f = v[0], l = v[1], w = v[2] ? this._num(v[2]) : 0.5,
+		r  = ( i = ( ( i = f[0] * w + l[0] * ( 1 - w ) ) > 255 ? 255 : i ).toString(16) ).length > 2 ? i.substr( 0, 2 ) : i.length == 1 ? '0' + i : i,
+		r += ( i = ( ( i = f[1] * w + l[1] * ( 1 - w ) ) > 255 ? 255 : i ).toString(16) ).length > 2 ? i.substr( 0, 2 ) : i.length == 1 ? '0' + i : i,
+		r += ( i = ( ( i = f[2] * w + l[2] * ( 1 - w ) ) > 255 ? 255 : i ).toString(16) ).length > 2 ? i.substr( 0, 2 ) : i.length == 1 ? '0' + i : i;
 		return '0x' + r;
 	},
 	'lighten', function(v){
-		return this._shadeColor( v[0], this._num(v[1]) );
+		return this._shade( this._shp2hex(v[0]), this._num(v[1]) );
 	},
 	'darken', function(v){
-		return this._shadeColor( v[0], this._num(v[1]) * -1 );
+		return this._shade( this._shp2hex(v[0]), this._num(v[1]) * -1 );
 	},
 	'saturate', function(v){
 		return this._saturate( v[0], this._num(v[1]) );
