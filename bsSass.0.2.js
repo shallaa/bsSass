@@ -173,7 +173,7 @@ bsSass.fn( 'function',
 	'_saturate', function( c, a ){
 		var t0 = this._hex2rgb(c);
 		return t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[1] += a, this.hsl(t0);
-	}
+	},
 	'rgb', function(v){
 		var c, i, k;
 		for( c = '#', i = 0 ; i < 3 ; i++ ) k = ( v[i] = this._num(v[i]) ), c += k ? ( k > 255 ? 255 : k ).toString(16) : '00';
