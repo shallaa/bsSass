@@ -219,11 +219,11 @@ bsSass.fn( 'function',
 	},
 	'saturate', function(v){
 		var t0 = this._hex2rgb(v[0]);
-		return t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[1] += this._num[v[1]], this.hsl(t0);
+		return t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[1] += this._num(v[1]), this.hsl(t0);
 	},
 	'desaturate', function(v){
 		var t0 = this._hex2rgb(v[0]);
-		return t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[1] -= this._num[v[1]], this.hsl(t0);
+		return t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[1] -= this._num(v[1]), this.hsl(t0);
 	},
 	'grascale', function(v){
 		var t0 = this._hex2rgb(v[0]);
