@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<title>bsSass sin</title>
+<meta name="keywords" content="bsSass,sass,SASS" />
+<meta name="description" content="bsSass Test0" />
+<meta charset="utf-8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,target-densitydpi=medium-dpi" />
+<link rel="shortcut icon" href="http://blog.bsidesoft.com/favicon.ico" type="image/x-icon">
+</head>
+<body>
+<div id="stage">
+	<div>1</div>
+	<div>2</div>
+	<div>3</div>
+	<div>4</div>
+	<div>5</div>
+	<div>6</div>
+	<div>7</div>
+	<div>8</div>
+	<div>9</div>
+	<div>10</div>
+	<div>11</div>
+	<div>12</div>
+</div>
+<script src="../../bsSass.0.1.js"></script>
+<script id="a" type="text/scss">
+#stage div{border-radius:10px;width:20px;height:20px;background:#f66;position:absolute;font-size:9px;color:#fff;text-align:center}
+#stage div:nth-child(1){left:circleX(0deg, 100, 200); top:circleY(0deg, 100, 200);}
+#stage div:nth-child(2){left:circleX(30deg, 100, 200); top:circleY(30deg, 100, 200);}
+#stage div:nth-child(3){left:circleX(60deg, 100, 200); top:circleY(60deg, 100, 200);}
+#stage div:nth-child(4){left:circleX(90deg, 100, 200); top:circleY(90deg, 100, 200);}
+#stage div:nth-child(5){left:circleX(120deg, 100, 200); top:circleY(120deg, 100, 200);}
+#stage div:nth-child(6){left:circleX(150deg, 100, 200); top:circleY(150deg, 100, 200);}
+#stage div:nth-child(7){left:circleX(180deg, 100, 200); top:circleY(180deg, 100, 200);}
+#stage div:nth-child(8){left:circleX(210deg, 100, 200); top:circleY(210deg, 100, 200);}
+#stage div:nth-child(9){left:circleX(240deg, 100, 200); top:circleY(240deg, 100, 200);}
+#stage div:nth-child(10){left:circleX(270deg, 100, 200); top:circleY(270deg, 100, 200);}
+#stage div:nth-child(11){left:circleX(300deg, 100, 200); top:circleY(300deg, 100, 200);}
+#stage div:nth-child(12){left:circleX(330deg, 100, 200); top:circleY(330deg, 100, 200);}
+</script>
+<script>
+bsSass.fn( 'function', '_angle', function(v){
+	var i;
+	return ( i = v.indexOf('deg') ) > -1 ? parseFloat( v.substring( 0, i ) ) * Math.PI / 180 : parseFloat(v);
+} ),
+bsSass.fn( 'function', 'sin', function(v){return Math.sin(this._angle(v[0]));} );
+bsSass.fn( 'function', 'cos', function(v){return Math.cos(this._angle(v[0]));} );
+bsSass.fn( 'function', 'circleX', function(v){return Math.cos(this._angle(v[0])) * parseFloat(v[1]) + parseFloat(v[2]) + 'px';} );
+bsSass.fn( 'function', 'circleY', function(v){return Math.sin(this._angle(v[0])) * parseFloat(v[1]) + parseFloat(v[2]) + 'px';} );
+bsSass( document.getElementById('a').text );
+</script>
+</body>
+</html>
+

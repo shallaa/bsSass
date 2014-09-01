@@ -1,4 +1,4 @@
-/* bsSass v0.1.4
+/* bsSass v0.2.0
  * Copyright (c) 2013 by ProjectBS Committe and contributors. 
  * http://www.bsplugin.com All rights reserved.
  * Licensed under the BSD license. See http://opensource.org/licenses/BSD-3-Clause
