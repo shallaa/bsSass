@@ -231,8 +231,7 @@ bsSass.fn( 'function',
 	},
 	'invert', function(v){
 		var t0;
-		t0 = this._hex2rgb(v[0]),
-		return '0x' + ( 255 - t0[0] ).toString(16) + ( 255 - t0[1] ).toString(16) + ( 255 - t0[1] ).toString(16);
+		return t0 = this._hex2rgb(v[0]), '0x' + ( 255 - t0[0] ).toString(16) + ( 255 - t0[1] ).toString(16) + ( 255 - t0[1] ).toString(16);
 	},
 	'complement', function(v){
 		var t0;
