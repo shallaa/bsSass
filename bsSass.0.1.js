@@ -225,7 +225,12 @@ bsSass.fn( 'function',
 		var t0;
 		return t0 = this._hex2rgb(v[0]), t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[1] -= this._num[v[1]], this.hsl(t0);
 	},
-	'grascale', function(v){},
+	'grascale', function(v){
+		var t0;
+		t0 = this._hex2rgb(v[0]),
+		t0 = (t0[0] + t0[1] + t0[2]) / 3;
+		return this.rgb([ t0, t0, t0 ]);
+	},
 	'invert', function(v){},
 	'complement', function(v){}
 );
