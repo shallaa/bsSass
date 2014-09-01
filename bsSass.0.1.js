@@ -144,11 +144,31 @@ bsSass.fn( 'function',
 		};
 	})(),
 	'_shadeColor', function( c, a ){
-		var f, t, p, R, G, B;
+		var t, p;
 		if( !c.indexOf('hsl') );// TODO : hsl(...)
+    return c = this._hex2rgb(c), t = a < 0 ? 0 : 255, p = a < 0 ? a * -1 : a, "0x" + ( 0x1000000 + ( Math.round( ( t - c[0] ) * p ) + c[0] ) * 0x10000 + ( Math.round( ( t - c[1] ) * p ) + c[1] ) * 0x100 + ( Math.round( ( t - c[2] ) * p ) + c[2] ) ).toString(16).substr(1);
+	},
+	'_hex2rgb', function( h ){
+		var f;
 		if( c.length != 5 ) while( c.length < 8 ) c += '0';
-		f = this._num(c), t = a < 0 ? 0 : 255, p = a < 0 ? a * -1 : a, R = f >> 16, G = f >> 8&0x00FF, B = f&0x0000FF;
-    return "0x" + ( 0x1000000 + ( Math.round( ( t - R ) * p ) + R ) * 0x10000 + ( Math.round( ( t - G ) * p ) + G ) * 0x100 + ( Math.round( ( t - B ) * p ) + B ) ).toString(16).substr(1);
+		return f = this._num(h), [ f>>16, f>>8&0x00FF, f&0x0000FF ];
+	},
+	'_rgb2hsl', function( r, b, g ){
+		var max, min, h, s, l, d;
+		r /= 255, g /= 255, b /= 255,
+		max = Math.max(r, g, b), min = Math.min(r, g, b),
+		h, s, l = (max + min) / 2;
+		if(max == min) h = s = 0;
+		else{
+			d = max - min, s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+			switch(max){
+			case r: h = ( g - b ) / d + ( g < b ? 6 : 0 ); break;
+			case g: h = ( b - r ) / d + 2; break;
+			case b: h = ( r - g ) / d + 4; break;
+			}
+			h /= 6;
+		}
+		return [ h, s, l ];
 	},
 	'rgb', function(v){
 		var c, i, k;
@@ -197,8 +217,14 @@ bsSass.fn( 'function',
 	'darken', function(v){
 		return this._shadeColor( v[0], this._num(v[1]) * -1 );
 	},
-	'saturate', function(v){},
-	'desaturate', function(v){},
+	'saturate', function(v){
+		var t0;
+		return t0 = this._hex2rgb(v[0]), t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[1] += this._num[v[1]], this.hsl(t0);
+	},
+	'desaturate', function(v){
+		var t0;
+		return t0 = this._hex2rgb(v[0]), t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[1] -= this._num[v[1]], this.hsl(t0);
+	},
 	'grascale', function(v){},
 	'invert', function(v){},
 	'complement', function(v){}
