@@ -227,10 +227,10 @@ bsSass.fn( 'function',
 		return this._shade( this._shp2hex(v[0]), this._num(v[1]) * -1 );
 	},
 	'saturate', function(v){
-		return this._saturate( v[0], this._num(v[1]) );
+		return this._saturate( this._shp2hex(v[0]), this._num(v[1]) );
 	},
 	'desaturate', function(v){
-		return this._saturate( v[0], this._num(v[1]) * -1 );
+		return this._saturate( this._shp2hex(v[0]), this._num(v[1]) * -1 );
 	},
 	'grascale', function(v){
 		var t0 = this._hex2rgb(v[0]);
