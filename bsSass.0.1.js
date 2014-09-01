@@ -227,10 +227,15 @@ bsSass.fn( 'function',
 	},
 	'grascale', function(v){
 		var t0;
-		t0 = this._hex2rgb(v[0]),
-		t0 = (t0[0] + t0[1] + t0[2]) / 3;
-		return this.rgb([ t0, t0, t0 ]);
+		return t0 = this._hex2rgb(v[0]), t0 = (t0[0] + t0[1] + t0[2]) / 3, this.rgb([ t0, t0, t0 ]);
 	},
-	'invert', function(v){},
-	'complement', function(v){}
+	'invert', function(v){
+		var t0;
+		t0 = this._hex2rgb(v[0]),
+		return '0x' + ( 255 - t0[0] ).toString(16) + ( 255 - t0[1] ).toString(16) + ( 255 - t0[1] ).toString(16);
+	},
+	'complement', function(v){
+		var t0;
+		return t0 = this._hex2rgb(v[0]), t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[0] = 180, this.hsl(t0);
+	}
 );
