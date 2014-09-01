@@ -146,7 +146,6 @@ bsSass.fn( 'function',
 	'_hex2rgb', function( h ){
 		var f;
 		if( h.length != 5 ) while( h.length < 8 ) h += '0';
-		console.log(h)
 		return f = this._num(h), [ f>>16, f>>8&0x00FF, f&0x0000FF ];
 	},
 	'_rgb2hsl', function( r, b, g ){
@@ -233,15 +232,15 @@ bsSass.fn( 'function',
 		return this._saturate( this._shp2hex(v[0]), this._num(v[1]) * -1 );
 	},
 	'grascale', function(v){
-		var t0 = this._hex2rgb(v[0]);
+		var t0 = this._hex2rgb(this._shp2hex(v[0]));
 		return t0 = (t0[0] + t0[1] + t0[2]) / 3, this.rgb([ t0, t0, t0 ]);
 	},
 	'invert', function(v){
-		var t0  = this._hex2rgb(v[0]);
+		var t0  = this._hex2rgb(this._shp2hex(v[0]));
 		return '0x' + ( 255 - t0[0] ).toString(16) + ( 255 - t0[1] ).toString(16) + ( 255 - t0[1] ).toString(16);
 	},
 	'complement', function(v){
-		var t0 = this._hex2rgb(v[0]);
+		var t0 = this._hex2rgb(this._shp2hex(v[0]));
 		return t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[0] = 180, this.hsl(t0);
 	}
 );
