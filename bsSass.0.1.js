@@ -32,7 +32,7 @@ var bsSass = (function( trim, bs, isDebug ){
 	pVal = function(v){
 		var i, j;
 		v = ( i = v.indexOf('(') ) > -1 && ( FUNC[j = v.substring( 0, i )] ) ?
-			FUNC[j]( v.substring( i + 1, v.lastIndexOf(')') ).split(',') ) :
+			FUNC[j](v.substring( i + 1, v.lastIndexOf(')') ).split(',')) :
 			VAR[v] === undefined ? v : VAR[v];
 		return rNum.test(v) ? parseFloat(v) : v;
 	},

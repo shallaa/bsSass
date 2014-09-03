@@ -46,6 +46,7 @@
 <script>
 bsSass.fn( 'function', '_angle', function(v){
 	var i;
+	console.log(v);
 	return ( i = v.indexOf('deg') ) > -1 ? parseFloat( v.substring( 0, i ) ) * Math.PI / 180 : parseFloat(v);
 } ),
 bsSass.fn( 'function', 'sin', function(v){return Math.sin(this._angle(v[0]));} );

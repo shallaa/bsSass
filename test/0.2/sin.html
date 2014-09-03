@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<title>bsSass sin</title>
+<meta name="keywords" content="bsSass,sass,SASS" />
+<meta name="description" content="bsSass Test0" />
+<meta charset="utf-8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,target-densitydpi=medium-dpi" />
+<link rel="shortcut icon" href="http://blog.bsidesoft.com/favicon.ico" type="image/x-icon">
+</head>
+<body>
+<div id="stage">
+	<div>1</div>
+	<div>2</div>
+	<div>3</div>
+	<div>4</div>
+	<div>5</div>
+	<div>6</div>
+	<div>7</div>
+	<div>8</div>
+	<div>9</div>
+	<div>10</div>
+	<div>11</div>
+	<div>12</div>
+</div>
+<script src="../../bsSass.0.2.js"></script>
+<script id="a" type="text/scss">
+#stage div{border-radius:10px;width:20px;height:20px;background:#f66;position:absolute;font-size:9px;color:#fff;text-align:center}
+#stage div:nth-child(1){left:circleX(0, 100, 200); top:circleY(0, 100, 200);}
+#stage div:nth-child(2){left:circleX(30, 100, 200); top:circleY(30, 100, 200);}
+#stage div:nth-child(3){left:circleX(60, 100, 200); top:circleY(60, 100, 200);}
+#stage div:nth-child(4){left:circleX(90, 100, 200); top:circleY(90, 100, 200);}
+#stage div:nth-child(5){left:circleX(120, 100, 200); top:circleY(120, 100, 200);}
+#stage div:nth-child(6){left:circleX(150, 100, 200); top:circleY(150, 100, 200);}
+#stage div:nth-child(7){left:circleX(180, 100, 200); top:circleY(180, 100, 200);}
+#stage div:nth-child(8){left:circleX(210, 100, 200); top:circleY(210, 100, 200);}
+#stage div:nth-child(9){left:circleX(240, 100, 200); top:circleY(240, 100, 200);}
+#stage div:nth-child(10){left:circleX(270, 100, 200); top:circleY(270, 100, 200);}
+#stage div:nth-child(11){left:circleX(300, 100, 200); top:circleY(300, 100, 200);}
+#stage div:nth-child(12){left:circleX(330, 100, 200); top:circleY(330, 100, 200);}
+</script>
+<script>
+var toRadian = Math.PI / 180;
+bsSass( document.getElementById('a').text, 0, {
+	'circleX':function( v, r, x ){return Math.cos( v * toRadian ) * r + x + 'px';},
+	'circleY':function( v, r, y ){return Math.sin( v * toRadian ) * r + y + 'px';}
+});
+(function(){
+var ex = (function(){
+	var FUNC = {
+		a:function(v1, v2){return v1 + v2;}
+	},
+	VAR = {'$a':10},
+	trim =/^\s*|\s*$/g,
+	ex = (function(){
+		var rnum = /^[-]?[0-9.]+$/, rstr = /^(["][^"]*["]|['][^']*['])$/, rkey = /^[a-zA-z0-9 ]+$/,
+		rvar = /^[$]\S+$/, runit = /^([-]?[0-9.]+)([^-0-9.]+)$/, rcolor = /(.)/g,
+		ra = /\[[^\[\]]*\]/g, rf = /[a-zA-z$_][a-zA-z0-9$_]*[ ]*[(][^)]*[)]/g, rp = /[(][^)]*[)]/,
+		rarr = /^[@]A[0-9]+[:][0-9]+[@]$/, rfunc = /^[@]F[0-9]+[:][0-9]+[@]$/, rparen = /^[@]P[0-9]+[:][0-9]+[@]$/,
+		val = {'true':true,'false':false,'null':null,'undefined':undefined},
+		op = {'+':1,'-':1,'*':2,'/':2},
+		opf = {'+':function(a,b){return a+b;},'-':function(a,b){return a-b;},'*':function(a,b){return a*b;},'/':function(a,b){return a/b;}},
+		Value = (function(){
+			var v = function(){
+				var i = 0, j = arguments.length;
+				while( i < j ) this[arguments[i++]] = arguments[i++];
+			}, fn = v.prototype;
+			fn.value = 0, fn.string = '', fn.toString = fn.valueOf = function(){return this.value;};
+			return v;
+		})(),
+		ex = function( v, f, p, a ){
+			var depth, ff, fp, fa, arg, t0, t1, i, j, k;
+			if( i = val[v = v.replace( trim, '' )]) return i;
+			if( v.charAt(0) == '#' ){
+				if( v.length == 4 ) v = '#' + v.substr(1).replace( rcolor, '$1$1');
+				return new Value( 'value', v, 'r', parseInt( '0x' + v.substr( 1, 2 ) ), 'g', parseInt( '0x' + v.substr( 3, 2 ) ), 'b', parseInt( '0x' + v.substr( 5, 2 ) ) );
+			}
+			if( rvar.test(v) ) return VAR[v];
+			if( rnum.test(v) ) return parseFloat(v);
+			if( runit.test(v) ) return new Value( 'value', v, 'unit', ( t1 = v.match(runit), t1[2] ), 'v', parseFloat(t1[1]) );
+			if( rstr.test(v) ) return v.substring( 1, v.length - 1 );
+			if( rkey.test(v) ) return v;
+			if( rarr.test(v) ){
+				for( t0 = a[v.substring( 2, i = v.indexOf(':') )][v.substring( i + 1, v.length - 1 )].split(','), i = 0, j = t0.length ; i < j ; i++ ) t0[i] = ex( t0[i], f, p, a );
+				return t0;
+			}
+			if( rfunc.test(v) ){
+				v = f[v.substring( 2, i = v.indexOf(':') )][v.substring( i + 1, v.length - 1 )], t0 = FUNC[v.substring( 0, i = v.indexOf('(') )];
+				for( t1 = v.substring( i + 1, v.length - 1 ).split(','), i = 0, j = t0.length ; i < j ; i++ ) t1[i] = ex( t1[i], f, p, a );
+				return t0.apply( t0, t1 );
+			}
+			if( rparen.test(v) ) return ex( p[v.substring( 2, i = v.indexOf(':') )][v.substring( i + 1, v.length - 1 )], f, p );
+			if( v.indexOf('(') > -1 ){
+				f = [], ff = function(v){
+					var t0 = f[depth] || ( f[depth] = [] ), i = t0.length;
+					return t0[i] = v, '@F' + depth + ':' + i + '@';
+				},
+				p = [], fp = function(v){
+					var t0 = p[depth] || ( p[depth] = [] ), i = t0.length;
+					return t0[i] = v.substring( 1, v.length - 1 ).replace( trim, '' ), '@P' + depth + ':' + i + '@';
+				},
+				depth = 0;while( rf.test(v) ) v = v.replace( rf, ff ), depth++;
+				depth = 0;while( rp.test(v) ) v = v.replace( rp, fp ), depth++;
+			}
+			if( v.indexOf('[') > -1 ){
+				a = [], fa = function(v){
+					var t0 = a[depth] || ( a[depth] = [] ), i = t0.length;
+					return t0[i] = v.substring( 1, v.length - 1 ).replace( trim, '' ), '@A' + depth + ':' + i + '@';
+				},
+				depth = 0;while( ra.test(v) ) v = v.replace( ra, fa ), depth++;
+			}
+			for( arg = [], i = k = 0, j = v.length ; i < j ; i++ ) if( op[t0 = v.charAt(i)] ) arg[arg.length] = ex( v.substring( k, i ), f, p, a ), arg[arg.length] = t0, k = i + 1;
+			arg[arg.length] = ex( v.substr(k), f, p, a );
+			i = 3;
+			while( i-- > 1 ){
+				j = 1;
+				while( j < arg.length ) if( op[arg[j]] == i ) arg.splice( j - 1, 3, opf[arg[j]]( arg[j - 1], arg[j + 1] ) ); else j += 2;
+			}
+			return arg[0];
+		};
+		return ex;
+	})();
+	return ex;
+})();
+console.log( ex( '1 + 2 * 3 + ( a(5,7) + $a )' ) );
+console.log( ex( '[1,2,a(5,7),5, $a]' ) );
+})();
+</script>
+</body>
+</html>

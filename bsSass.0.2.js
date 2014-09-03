@@ -29,13 +29,74 @@ var bsSass = (function( trim, bs, isDebug ){
 	},
 	extend, rExtend = /[@]extend (.+)[;]/g, fExtend = function( g, v ){return extend[v] || '';},
 	placeholder = {},
-	pVal = function(v){
-		var i, j;
-		v = ( i = v.indexOf('(') ) > -1 && ( FUNC[j = v.substring( 0, i )] ) ?
-			FUNC[j]( v.substring( i + 1, v.lastIndexOf(')') ).split(',') ) :
-			VAR[v] === undefined ? v : VAR[v];
-		return rNum.test(v) ? parseFloat(v) : v;
-	},
+	pEx = (function(){
+		var rnum = /^[-]?[0-9.]+$/, rstr = /^(["][^"]*["]|['][^']*['])$/, rkey = /^[a-zA-z0-9 ]+$/,
+		rvar = /^[$]\S+$/, runit = /^([-]?[0-9.]+)([^-0-9.]+)$/, rcolor = /(.)/g,
+		ra = /\[[^\[\]]*\]/g, rf = /[a-zA-z$_][a-zA-z0-9$_]*[ ]*[(][^)]*[)]/g, rp = /[(][^)]*[)]/,
+		rarr = /^[@]A[0-9]+[:][0-9]+[@]$/, rfunc = /^[@]F[0-9]+[:][0-9]+[@]$/, rparen = /^[@]P[0-9]+[:][0-9]+[@]$/,
+		val = {'true':true,'false':false,'null':null,'undefined':undefined},
+		op = {'+':1,'-':1,'*':2,'/':2},
+		opf = {'+':function(a,b){return a+b;},'-':function(a,b){return a-b;},'*':function(a,b){return a*b;},'/':function(a,b){return a/b;}},
+		Value = (function(){
+			var v = function(){
+				var i = 0, j = arguments.length;
+				while( i < j ) this[arguments[i++]] = arguments[i++];
+			}, fn = v.prototype;
+			fn.value = 0, fn.string = '', fn.toString = fn.valueOf = function(){return this.value;};
+			return v;
+		})(),
+		ex = function( v, f, p, a ){
+			var depth, ff, fp, fa, arg, t0, t1, i, j, k;
+			if( i = val[v = v.replace( trim, '' )]) return i;
+			if( v.charAt(0) == '#' ){
+				if( v.length == 4 ) v = '#' + v.substr(1).replace( rcolor, '$1$1');
+				return new Value( 'value', v, 'r', parseInt( '0x' + v.substr( 1, 2 ) ), 'g', parseInt( '0x' + v.substr( 3, 2 ) ), 'b', parseInt( '0x' + v.substr( 5, 2 ) ) );
+			}
+			if( rvar.test(v) ) return VAR[v];
+			if( rnum.test(v) ) return parseFloat(v);
+			if( runit.test(v) ) return new Value( 'value', v, 'unit', ( t1 = v.match(runit), t1[2] ), 'v', parseFloat(t1[1]) );
+			if( rstr.test(v) ) return v.substring( 1, v.length - 1 );
+			if( rkey.test(v) ) return v;
+			if( rarr.test(v) ){
+				for( t0 = a[v.substring( 2, i = v.indexOf(':') )][v.substring( i + 1, v.length - 1 )].split(','), i = 0, j = t0.length ; i < j ; i++ ) t0[i] = ex( t0[i], f, p, a );
+				return t0;
+			}
+			if( rfunc.test(v) ){
+				v = f[v.substring( 2, i = v.indexOf(':') )][v.substring( i + 1, v.length - 1 )], t0 = FUNC[v.substring( 0, i = v.indexOf('(') )];
+				for( t1 = v.substring( i + 1, v.length - 1 ).split(','), i = 0, j = t0.length ; i < j ; i++ ) t1[i] = ex( t1[i], f, p, a );
+				return t0.apply( t0, t1 );
+			}
+			if( rparen.test(v) ) return ex( p[v.substring( 2, i = v.indexOf(':') )][v.substring( i + 1, v.length - 1 )], f, p );
+			if( v.indexOf('(') > -1 ){
+				f = [], ff = function(v){
+					var t0 = f[depth] || ( f[depth] = [] ), i = t0.length;
+					return t0[i] = v, '@F' + depth + ':' + i + '@';
+				},
+				p = [], fp = function(v){
+					var t0 = p[depth] || ( p[depth] = [] ), i = t0.length;
+					return t0[i] = v.substring( 1, v.length - 1 ).replace( trim, '' ), '@P' + depth + ':' + i + '@';
+				},
+				depth = 0;while( rf.test(v) ) v = v.replace( rf, ff ), depth++;
+				depth = 0;while( rp.test(v) ) v = v.replace( rp, fp ), depth++;
+			}
+			if( v.indexOf('[') > -1 ){
+				a = [], fa = function(v){
+					var t0 = a[depth] || ( a[depth] = [] ), i = t0.length;
+					return t0[i] = v.substring( 1, v.length - 1 ).replace( trim, '' ), '@A' + depth + ':' + i + '@';
+				},
+				depth = 0;while( ra.test(v) ) v = v.replace( ra, fa ), depth++;
+			}
+			for( arg = [], i = k = 0, j = v.length ; i < j ; i++ ) if( op[t0 = v.charAt(i)] ) arg[arg.length] = ex( v.substring( k, i ), f, p, a ), arg[arg.length] = t0, k = i + 1;
+			arg[arg.length] = ex( v.substr(k), f, p, a );
+			i = 3;
+			while( i-- > 1 ){
+				j = 1;
+				while( j < arg.length ) if( op[arg[j]] == i ) arg.splice( j - 1, 3, opf[arg[j]]( arg[j - 1], arg[j + 1] ) ); else j += 2;
+			}
+			return arg[0];
+		};
+		return ex;
+	})(),
 	pAdd = function( v, arg, bodys ){
 		var i, j;
 		if( v.indexOf('@include') === 0 ){
@@ -45,7 +106,7 @@ var bsSass = (function( trim, bs, isDebug ){
 			for( v = v.split(';'), i = 0, j = v.length ; i < j ; i++ ) pAdd( v[i], arg, bodys );
 		}else if( v = v.replace( trim, '' ) ){
 			arg[arg.length] = v.substring( 0, i = v.indexOf(':') ).replace( trim, '' ),
-			arg[arg.length] = pVal(v.substr( i + 1 ).replace( trim, ''));
+			arg[arg.length] = pEx(v.substr( i + 1 ).replace( trim, ''));
 		}
 	},
 	pData = function( v, depth, sels, bodys ){
@@ -92,7 +153,7 @@ var bsSass = (function( trim, bs, isDebug ){
 					continue;
 				}
 				for( v = bodys[k].split(';'), sels.length = i = 0, j = v.length; i < j ; i++ ) if( t0 = v[i].replace( trim, '' ) ) pAdd( t0, sels, bodys );
-				if( isDebug ) console.log( k, '{', sels, '}' );
+				if( isDebug ) console.log( k, '{', sels.join(','), '}' );
 				w0 += k + '{' + css(sels) + '}\n';
 			}else w0 += k + '{' + bodys[k] + '}';
 		}
@@ -104,7 +165,12 @@ var bsSass = (function( trim, bs, isDebug ){
 		while( i < j ) r += v[i++] + ':' + v[i++] + ';'
 		return r;
 	},
-	f = function(v){v.substr( v.length - 4 ) == '.css' ? bs.get( parser, v ) : parser(v);};
+	f = function( v, val, fn ){
+		var k;
+		if( val ) for( k in val ) VAR[k] = val[k];
+		if( fn ) for( k in fn ) FUNC[k] = fn[k];
+		v.substr( v.length - 4 ) == '.css' ? bs.get( parser, v ) : parser(v);
+	};
 	return f.fn = (function(){
 		var t = {mixin:MIX, 'var':VAR, 'function':FUNC};
 		return function( type ){
@@ -130,111 +196,37 @@ var bsSass = (function( trim, bs, isDebug ){
 }, true );
 // http://www.sass-lang.com/documentation/Sass/Script/Functions.html
 builtinFunction:
-bsSass.fn( 'function',
-	'_num', (function(){
-		var re = /(.)/g;
-		return function(v){
-			var i, t0;
-			if( v.splice ){
-				i = v.length;
-				while( i-- ) typeof v[i] == 'string' ? ( v[i] = ( v[i] = v[i].replace( trim, '' ) ) ? v[i].charAt( v[i].length - 1 ) == '%' ? parseFloat( v[i].substring(0, v[i].length - 1 ) ) * .01 : v[i].substr( 0, 2 ) == '0x' ? ( t0 = v[i].slice(2) ).length == 3 ? parseInt( '0x' + t0.replace( re, '$1$1' ), 16 ) : parseInt( v[i], 16 ) : parseFloat(v[i]) : 0 ) : 0;
-				return v;
+(function(){
+	var t0;
+	bsSass.fn( 'function',
+		'rgb', function( r, g, b ){
+			return new Value( 'r', r, 'g', g, 'b', b, 'string', 'rgb(' + r + ',' + g + ',' + b + ')' );
+		},
+		'rgba', function( r, g, b, a ){
+			return new Value( 'r', r = +r, 'g', g = +g, 'b', b = +b, 'a', a = +a, 'string', 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')' );
+		},
+		'hsl', t0 = (function(){
+			var f = function( p, q, t ){
+				if(t < 0) t += 1; else if(t > 1) t -= 1;
+				return t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * ( 2 / 3 - t ) * 6 : p;
 			}
-			return typeof v == 'string' ? ( v = v.replace( trim, '' ) ) ? v.charAt( v.length - 1 ) == '%' ? parseFloat( v.substring(0, v.length - 1 ) ) * .01 : v.substr( 0, 2 ) == '0x' ? ( t0 = v.slice(2) ).length == 3 ? parseInt( '0x' + t0.replace( re, '$1$1' ), 16 ) : parseInt( v, 16 ) : parseFloat(v) : 0 : v;
-		};
-	})(),
-	'_shadeColor', function( c, a ){
-		var t, p;
-		if( !c.indexOf('hsl') );// TODO : hsl(...)
-    return c = this._hex2rgb(c), t = a < 0 ? 0 : 255, p = a < 0 ? a * -1 : a, "0x" + ( 0x1000000 + ( Math.round( ( t - c[0] ) * p ) + c[0] ) * 0x10000 + ( Math.round( ( t - c[1] ) * p ) + c[1] ) * 0x100 + ( Math.round( ( t - c[2] ) * p ) + c[2] ) ).toString(16).substr(1);
-	},
-	'_hex2rgb', function( h ){
-		var f;
-		if( c.length != 5 ) while( c.length < 8 ) c += '0';
-		return f = this._num(h), [ f>>16, f>>8&0x00FF, f&0x0000FF ];
-	},
-	'_rgb2hsl', function( r, b, g ){
-		var max, min, h, s, l, d;
-		r /= 255, g /= 255, b /= 255,
-		max = Math.max(r, g, b), min = Math.min(r, g, b),
-		h, s, l = (max + min) / 2;
-		if(max == min) h = s = 0;
-		else{
-			d = max - min, s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-			switch(max){
-			case r: h = ( g - b ) / d + ( g < b ? 6 : 0 ); break;
-			case g: h = ( b - r ) / d + 2; break;
-			case b: h = ( r - g ) / d + 4; break;
-			}
-			h /= 6;
+			return function( h, s, l ){
+				var r, g, b, p, q;
+				if( h > 360 ) h -= parseInt( h / 360 ) * 360;
+				h /= 360;
+				if( s == 0 ) r = g = b = l;
+				else p = 2 * l - ( q = l < .5 ? l * ( 1 + s ) : l + s - l * s ), r = f( p, q, h + 1 / 3 ), g = f( p, q, h ), b = f( p, q, h - 1 / 3 );
+				return this[arguments.length > 3 ? 'rgba' : 'rgb']( Math.round( r * 255 ), Math.round( g * 255 ), Math.round( b * 255 ), arguments[3] );
+			};
+		})(),
+		'hsla', t0,
+		'mix', function( c0, c1 ){
+			var w0 = 1, w1 = 1, r, g, b;
+			if( arguments.length > 2 ) w0 = arguments[2], w1 = 1 - w0;
+			r = parseInt( ( c0.r * w0 + c1.r * w1 ) * .5 ),
+			g = parseInt( ( c0.g * w0 + c1.g * w1 ) * .5 ),
+			b = parseInt( ( c0.b * w0 + c1.b * w1 ) * .5 );
+			return c0.a !== undefined && c1.a !== undefined ? this.rgba( r, g, b, ( c0.a * w0 + c1.a * w1 ) * .5 ) : this.rgb( r, g, b );
 		}
-		return [ h, s, l ];
-	},
-	'rgb', function(v){
-		var c, i, k;
-		for( c = '#', i = 0 ; i < 3 ; i++ ) k = ( v[i] = this._num(v[i]) ), c += k ? ( k > 255 ? 255 : k ).toString(16) : '00';
-		return c;
-	},
-	'rgba', function(v){
-		var c, i, k;
-		for( this._num(v), c = 'rgba(', i = 0 ; i < 3 ; i++ ) c += ( v[i] ? ( v[i] > 255 ? 255 : v[i] ) : '00' ) + ',';
-		return c + ( v[3] > 1 ? 1 : v[3] < 0 ? 0 : v[3] ) + ')';
-	},
-	'hsl', (function(){
-		var f = function( p, q, t ){
-			if(t < 0) t += 1; else if(t > 1) t -= 1;
-			return t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * ( 2 / 3 - t ) * 6 : p;
-		}
-		return function(v){
-			var h, s, l, p, q;
-			v = this._num(v), s = v[1], l = v[2];
-			if( ( h = v[0] ) > 360 ) h -= parseInt( h / 360 ) * 360;
-			h /= 360;
-			if(s == 0) v[0] = v[1] = v[2] = l;
-			else p = 2 * l - ( q = l < .5 ? l * ( 1 + s ) : l + s - l * s ), v[0] = f( p, q, h + 1 / 3 ), v[1] = f( p, q, h ), v[2] = f( p, q, h - 1 / 3 );
-			p = 3;
-			while( p-- ) v[p] = Math.round( v[p] * 255 );
-			return this.rgb(v);
-		};
-	})(),
-	'hsla', function(v){return this.hsl(v), this.rgba(v);},
-	'mix', function(v){
-		var f, l, w, i, r;
-		i = 2;
-		while( i-- ){
-			if( !v[i].indexOf('rgb') );// TODO : rgb(...)
-			if( v[i].length != 5 ) while( v[i].length < 8 ) v[i] += '0';
-			v[i] = this._num(v[i]);
-		}
-		f = v[0], l = v[1], w = this._num(v[2]),
-		r = ( ( w ? f * w + l * ( 1 - w ) : f + l ) / 2 ).toString(16);
-		while( r.length < 6 ) r = '0' + r;
-		return '0x' + r;
-	},
-	'lighten', function(v){
-		return this._shadeColor( v[0], this._num(v[1]) );
-	},
-	'darken', function(v){
-		return this._shadeColor( v[0], this._num(v[1]) * -1 );
-	},
-	'saturate', function(v){
-		var t0 = this._hex2rgb(v[0]);
-		return t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[1] += this._num[v[1]], this.hsl(t0);
-	},
-	'desaturate', function(v){
-		var t0 = this._hex2rgb(v[0]);
-		return t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[1] -= this._num[v[1]], this.hsl(t0);
-	},
-	'grascale', function(v){
-		var t0 = this._hex2rgb(v[0]);
-		return t0 = (t0[0] + t0[1] + t0[2]) / 3, this.rgb([ t0, t0, t0 ]);
-	},
-	'invert', function(v){
-		var t0  = this._hex2rgb(v[0]);
-		return '0x' + ( 255 - t0[0] ).toString(16) + ( 255 - t0[1] ).toString(16) + ( 255 - t0[1] ).toString(16);
-	},
-	'complement', function(v){
-		var t0 = this._hex2rgb(v[0]);
-		return t0 = this._rgb2hsl( t0[0], t0[1], t0[2] ), t0[0] = 180, this.hsl(t0);
-	}
-);
+	);
+})();
