@@ -69,7 +69,7 @@ var ex = (function(){
 				var i = 0, j = arguments.length;
 				while( i < j ) this[arguments[i++]] = arguments[i++];
 			}, fn = v.prototype;
-			fn.value = 0, fn.string = '', fn.toString = fn.valueOf = function(){return this.value;};
+			fn.value = '', fn.toString = fn.valueOf = function(){return this.value;};
 			return v;
 		})(),
 		ex = function( v, f, p, a ){

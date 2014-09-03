@@ -1,11 +1,11 @@
-/* bsSass v0.2.0
+/* bsSass v0.2.1
  * Copyright (c) 2013 by ProjectBS Committe and contributors. 
  * http://www.bsplugin.com All rights reserved.
  * Licensed under the BSD license. See http://opensource.org/licenses/BSD-3-Clause
  */
-var bsSass = (function( trim, bs, isDebug ){
+var bsSass = (function( trim, css, bs, isDebug ){
 	'use strict';
-	var rNum = /^[-]?[0-9.]+$/, rSel = /[};][^};]+$/g, rParent = /[&]/g,
+	var rSel = /[};][^};]+$/g, rParent = /[&]/g,
 	VAR = {}, rVAL = /\$[^;:]+[:][^;:]+;/g, fVAL = function(v){return v = v.substring( 0, v.length - 1 ).split(':'), VAR[v[0]] = pVal(v[1]), '';},
 	MIX = {}, rMIX = /[@]mixin [^@{]+[{][^}]+[}]/g, fMIX = function(v){
 		var n, arg = '', b, i;
@@ -62,9 +62,9 @@ var bsSass = (function( trim, bs, isDebug ){
 				return t0;
 			}
 			if( rfunc.test(v) ){
-				v = f[v.substring( 2, i = v.indexOf(':') )][v.substring( i + 1, v.length - 1 )], t0 = FUNC[v.substring( 0, i = v.indexOf('(') )];
-				for( t1 = v.substring( i + 1, v.length - 1 ).split(','), i = 0, j = t0.length ; i < j ; i++ ) t1[i] = ex( t1[i], f, p, a );
-				return t0.apply( t0, t1 );
+				v = f[v.substring( 2, i = v.indexOf(':') )][v.substring( i + 1, v.length - 1 )], t0 = FUNC[k = v.substring( 0, i = v.indexOf('(') )];
+				for( t1 = v.substring( i + 1, v.length - 1 ).split(','), i = 0, j = t1.length ; i < j ; i++ ) t1[i] = ex( t1[i], f, p, a );
+				return t0 ? t0.apply( t0, t1 ) : k + '(' + t1.join(',') + ')';
 			}
 			if( rparen.test(v) ) return ex( p[v.substring( 2, i = v.indexOf(':') )][v.substring( i + 1, v.length - 1 )], f, p );
 			if( v.indexOf('(') > -1 ){
@@ -160,11 +160,6 @@ var bsSass = (function( trim, bs, isDebug ){
 		document.getElementsByTagName('head')[0].appendChild( w1 = document.createElement('style') ),
 		w1['styleSheet'] ? ( w1['styleSheet'].cssText = w0 ) : ( w1.innerHTML = w0 );
 	},
-	css = function(v){
-		var r = '', i = 0, j = v.length;
-		while( i < j ) r += v[i++] + ':' + v[i++] + ';'
-		return r;
-	},
 	f = function( v, val, fn ){
 		var k;
 		if( val ) for( k in val ) VAR[k] = val[k];
@@ -178,7 +173,11 @@ var bsSass = (function( trim, bs, isDebug ){
 			if( t0 = t[type] ) while( i < j ) t0[arguments[i++]] = arguments[i++];
 		};
 	})(), f;
-})( /^\s*|\s*$/g, {
+})( /^\s*|\s*$/g, function(v){
+	var r = '', i = 0, j = v.length;
+	while( i < j ) r += v[i++] + ':' + v[i++] + ';'
+	return r;
+},{
 	get:(function(xhr){
 		return xhr = window['XMLHttpRequest'] ? function(){return new XMLHttpRequest;} : (function(){
 			var t0 = 'MSXML2.XMLHTTP.', i, j;
