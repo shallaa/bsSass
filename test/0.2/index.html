@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<title>bsSass Test0</title>
+<meta name="keywords" content="bsSass,sass,SASS" />
+<meta name="description" content="bsSass Test0" />
+<meta charset="utf-8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,target-densitydpi=medium-dpi" />
+<link rel="shortcut icon" href="http://blog.bsidesoft.com/favicon.ico" type="image/x-icon">
+</head>
+<body>
+<div id="stage" style="width:100px">
+	test stage
+	<div class="test0">test0</div>
+	<div class="wrap0">
+		<div class="a">a</div>
+		<div class="b">b</div>
+		<div class="c">c</div>
+		<div class="d">d</div>
+	</div>
+	<div class="wrap1">
+		<div class="a1">a1</div>
+		<div class="b1">b1</div>
+		<div class="c1">c1</div>
+	</div>
+</div>
+<script src="../../bsSass.0.2.js"></script>
+<script id="a" type="text/scss">
+$color:#f00;
+$width:100px;
+$position:absolute;
+$back:#aaf;
+@mixin f0{
+	height:50px;
+}
+@mixin f2( $color, $size ){
+	margin:0;
+	font-size:$size;
+	color:$color;
+}
+.test0{
+	background:$color;
+	width:$width;
+	@include f0;
+	@include f2( #fff, 20px );
+}
+.wrap0{
+	top:100px;
+	background:$back;
+	position:$position;
+	width:300px;
+	height:300px;
+	.wrap1{
+		top:500px;
+	}
+	&.wrap2{
+		top:700px;
+	}
+}
+</script>
+<script id="b" type="text/scss">
+.a{
+	background:#ff0;
+	width:10px;
+	.b{
+		margin-left:30px;
+		height:10px;
+		.c{
+			margin-left:60px;
+			font-size:20px;
+			.d{
+				margin-left:90px;
+				color:#f00;
+			}
+			font-weight:bold;
+		}
+		padding:10px;
+	}
+	position:relative;
+}
+</script>
+<script id="c" type="text/scss">
+.a1{
+	width:10px;
+	.b1{
+		margin-left:30px;
+		height:10px;
+		.c1{
+			margin-left:60px;
+			font:{
+				size:20px;
+				weight:bold;
+			}
+			padding:10px;
+		}
+		padding:0;
+	}
+	position:relative;
+}
+</script>
+<script id="d" type="text/scss">
+.a{
+	margin:0;
+	.b{
+		margin:1;
+		.b0{
+			margin:2;
+		}
+	}
+	margin:3;
+	.c{
+		margin:4;
+	}
+	margin:5;
+}
+.a2{
+	margin:0;
+	.b2{
+		margin:1;
+		.b20{
+			margin:2;
+		}
+	}
+	margin:3;
+	.c2{
+		margin:4;
+	}
+	margin:5;
+}
+</script>
+<script id="e" type="text/scss">
+%btn{
+	width:50;
+}
+.a{
+	margin:0;
+	margin:5;
+}
+.a2{
+	@extend .a;
+	@extend %btn;
+	margin:7;
+}
+</script>
+<script id="f" type="text/scss">
+.a{
+	color:rgb( 255, 128, 128 );
+	color:rgba( 255, 128, 128, 0.5 );
+	color:hsl( 0, 100%, 50% );
+	color:hsla( 300, 100%, 50%, 0.5 );
+	color:hsl( 0, 100%, 50% );
+	color:hsl( 120, 100%, 50% );
+	color:hsl( 240, 100%, 50% );
+	color:hsl( 60, 100%, 50% );
+	color:hsl( 180, 100%, 50% );
+	color:hsl( 300, 100%, 50% );
+	color:hsl( 0, 0%, 75% );
+	color:hsl( 0, 0%, 50% );
+	color:hsl( 0, 100%, 25% );
+	color:hsl( 60, 100%, 25% );
+	color:mix(#f00, #00f);
+	color:mix(#f00, #00f, 25%);
+	color:lighten(#800, 20%);
+	color:darken(#800, 20%);
+	color:saturate(#855, 20%);
+	color:desaturate(#855, 20%);
+}
+</script>
+<script id="g" type="text/scss">
+@import 'import.css';
+.a2{
+	@extend .a;
+	@extend %btn;
+	margin:7;
+}
+</script>
+
+<script>
+/*
+bsSass( document.getElementById('a').text );
+bsSass( document.getElementById('b').text );
+bsSass( document.getElementById('c').text );
+
+//bsSass( document.getElementById('d').text );
+bsSass( document.getElementById('e').text );
+*/
+bsSass( document.getElementById('f').text );
+bsSass( document.getElementById('g').text );
+</script>
+</body>
+</html>
+
